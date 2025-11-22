@@ -22,24 +22,38 @@ const io = new Server(server, {
   }
 });
 
+// Middleware
+app.use(express.json()); // Enable JSON body parsing for REST API
 app.use(express.static(path.join(__dirname, 'public')));
 
+// REST API Endpoint for commands
+app.post('/api/command', (req, res) => {
+  const data = req.body;
+  console.log('Command from Web (REST):', data);
+  // Relay command to ESP32 via Socket.IO
+  io.emit('esp32_command', data);
+  res.json({ status: 'success', data });
+});
+
+// Serve Frontend
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Socket.IO Logic
 io.on('connection', (socket) => {
   console.log(`[${new Date().toISOString()}] User connected: ${socket.id}`);
 
+  // Handle data from ESP32
   socket.on('esp32_message', (data) => {
     console.log('Data received:', data);
-    // Broadcast to web clients if you have a frontend
+    // Broadcast to web clients
     io.emit('web_update', data); 
   });
 
-  // Handle commands from the Web Client and send to ESP32
+  // Handle commands from the Web Client (Legacy Socket method, kept for compatibility if needed)
   socket.on('web_command', (data) => {
-    console.log('Command from Web:', data);
+    console.log('Command from Web (Socket):', data);
     io.emit('esp32_command', data);
   });
 

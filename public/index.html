@@ -500,20 +500,32 @@
             renderUI();
         });
 
+        async function sendCommand(data) {
+            try {
+                await fetch('/api/command', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+            } catch (e) {
+                console.error("Error sending command:", e);
+            }
+        }
+
         function togglePower() {
             state.power = !state.power;
             renderUI();
-            socket.emit('web_command', { action: 'power', value: state.power });
+            sendCommand({ action: 'power', value: state.power });
         }
         function setMode(m) {
             state.mode = m;
             renderUI();
-            socket.emit('web_command', { action: 'set_mode', value: m });
+            sendCommand({ action: 'set_mode', value: m });
         }
         function setFan(f) {
             state.fanSpeed = f;
             renderUI();
-            socket.emit('web_command', { action: 'set_fan', value: f });
+            sendCommand({ action: 'set_fan', value: f });
         }
 
         function renderUI() {
