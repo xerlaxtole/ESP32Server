@@ -14,7 +14,7 @@
     <style>
         :root {
             --bg-color: #4f83e4; /* Mario Sky Blue */
-            --card-bg: #ffffff;
+            --card-bg: rgba(255, 255, 255, 0.164);
             --text-color: #000000;
             --border-color: #000000;
             --shadow-color: rgba(0,0,0,0.5);
@@ -85,6 +85,8 @@
         /* --- RETRO CARDS --- */
         .card {
             background: var(--card-bg);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             border: 4px solid var(--border-color);
             box-shadow: 8px 8px 0px var(--border-color);
             padding: 20px;
