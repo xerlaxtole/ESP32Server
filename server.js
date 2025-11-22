@@ -1,6 +1,7 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require("socket.io");
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
@@ -21,8 +22,10 @@ const io = new Server(server, {
   }
 });
 
+app.use(express.static(path.join(__dirname, 'public')));
+
 app.get('/', (req, res) => {
-  res.send(`Server is running in ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'} mode.`);
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 io.on('connection', (socket) => {
@@ -32,6 +35,12 @@ io.on('connection', (socket) => {
     console.log('Data received:', data);
     // Broadcast to web clients if you have a frontend
     io.emit('web_update', data); 
+  });
+
+  // Handle commands from the Web Client and send to ESP32
+  socket.on('web_command', (data) => {
+    console.log('Command from Web:', data);
+    io.emit('esp32_command', data);
   });
 
   socket.on('disconnect', () => {
