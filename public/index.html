@@ -723,7 +723,8 @@
 			}
 
 			function renderUI() {
-				document.getElementById("tempValue").innerText = state.roomTemp;
+				document.getElementById("tempValue").innerText =
+					state.temperature;
 
 				const pBtn = document.getElementById("powerBtn");
 				if (state.power) pBtn.classList.add("active");

@@ -70,8 +70,8 @@ io.on("connection", (socket) => {
 		serverState = { ...serverState, ...data };
 
 		// Add temperature to history if present
-		if (data.roomTemp !== undefined) {
-			serverState.history.push(data.roomTemp);
+		if (data.temperature !== undefined) {
+			serverState.history.push(data.temperature);
 			// Limit history size
 			if (serverState.history.length > MAX_HISTORY) {
 				serverState.history.shift();
@@ -96,7 +96,7 @@ io.on("connection", (socket) => {
 // Setup cron job to poll ESP32 for updates
 cron.schedule(CRON_EXPRESSION, () => {
 	console.log(`[${new Date().toISOString()}] Polling ESP32 for updates...`);
-	io.emit("server_cmd", { action: "report" });
+	io.emit("esp32_command", { action: "report" });
 });
 
 server.listen(PORT, () => {
