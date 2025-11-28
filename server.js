@@ -28,9 +28,9 @@ const io = new Server(server, {
 });
 
 // Server state to track temperature history
-const MAX_HISTORY = 20;
+const MAX_HISTORY = 24;
 let serverState = {
-	roomTemp: null,
+	temperature: null,
 	power: false,
 	mode: "cool",
 	fanSpeed: "auto",
@@ -61,6 +61,11 @@ io.on("connection", (socket) => {
 
 	// Send initial state to newly connected client
 	socket.emit("web_update", serverState);
+
+	// Handle state request from client
+	socket.on("request_state", () => {
+		socket.emit("web_update", serverState);
+	});
 
 	// Handle data from ESP32
 	socket.on("esp32_message", (data) => {
