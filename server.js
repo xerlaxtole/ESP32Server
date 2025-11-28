@@ -45,12 +45,69 @@ let lastHistoryTimestamp = null;
 app.use(express.json()); // Enable JSON body parsing for REST API
 app.use(express.static(path.join(__dirname, "public")));
 
+// Helper function to update serverState based on incoming commands
+function updateServerStateFromCommand(command) {
+	if (!command || !command.action) {
+		console.warn("Invalid command received:", command);
+		return false;
+	}
+
+	let updated = false;
+
+	switch (command.action) {
+		case "power":
+			if (typeof command.value === "boolean") {
+				serverState.power = command.value;
+				console.log(`[State Update] Power: ${command.value}`);
+				updated = true;
+			}
+			break;
+
+		case "set_mode":
+			const validModes = ["cool", "dry", "fan"];
+			if (validModes.includes(command.value)) {
+				serverState.mode = command.value;
+				console.log(`[State Update] Mode: ${command.value}`);
+				updated = true;
+			}
+			break;
+
+		case "set_fan":
+			const validFanSpeeds = ["low", "med", "high", "auto"];
+			if (validFanSpeeds.includes(command.value)) {
+				serverState.fanSpeed = command.value;
+				console.log(`[State Update] Fan Speed: ${command.value}`);
+				updated = true;
+			}
+			break;
+
+		case "report":
+			// report doesn't change state
+			break;
+
+		default:
+			console.warn(`Unknown command action: ${command.action}`);
+	}
+
+	return updated;
+}
+
 // REST API Endpoint for commands
 app.post("/api/command", (req, res) => {
 	const data = req.body;
 	console.log("Command from Web (REST):", data);
+
+	// Update server state based on command action
+	const stateUpdated = updateServerStateFromCommand(data);
+
 	// Relay command to ESP32 via Socket.IO
 	io.emit("esp32_command", data);
+
+	// Broadcast updated state to all web clients if state changed
+	if (stateUpdated) {
+		io.emit("web_update", serverState);
+	}
+
 	res.json({ status: "success", data });
 });
 
@@ -108,7 +165,17 @@ io.on("connection", (socket) => {
 	// Handle commands from the Web Client (Legacy Socket method, kept for compatibility if needed)
 	socket.on("web_command", (data) => {
 		console.log("Command from Web (Socket):", data);
+
+		// Update server state based on command action
+		const stateUpdated = updateServerStateFromCommand(data);
+
+		// Relay command to ESP32 via Socket.IO
 		io.emit("esp32_command", data);
+
+		// Broadcast updated state to all web clients if state changed
+		if (stateUpdated) {
+			io.emit("web_update", serverState);
+		}
 	});
 
 	socket.on("disconnect", () => {
