@@ -1,631 +1,850 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart AC Controller</title>
-    
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Smart AC Controller</title>
 
-    <style>
-        :root {
-            --bg-color: #4f83e4; /* Mario Sky Blue */
-            --card-bg: rgba(255, 255, 255, 0.164);
-            --text-color: #000000;
-            --border-color: #000000;
-            --shadow-color: rgba(0,0,0,0.5);
-            --accent-color: #ff4d4d;
-            --active-color: #34c759;
-        }
+		<!-- Fonts -->
+		<link
+			href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+			rel="stylesheet"
+		/>
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+		<!-- Chart.js -->
+		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-        body {
-            font-family: 'Press Start 2P', cursive;
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-color);
-            overflow: hidden;
-            background-color: var(--bg-color);
-            image-rendering: pixelated;
-        }
+		<style>
+			:root {
+				--bg-color: #4f83e4; /* Mario Sky Blue */
+				--card-bg: rgba(255, 255, 255, 0.164);
+				--text-color: #000000;
+				--border-color: #000000;
+				--shadow-color: rgba(0, 0, 0, 0.5);
+				--accent-color: #ff4d4d;
+				--active-color: #34c759;
+			}
 
-        /* --- PIXEL SKY BACKGROUND --- */
-        .sky-container {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
-            background: var(--bg-color);
-            background-image: 
-                linear-gradient(transparent 95%, rgba(0,0,0,0.1) 50%),
-                linear-gradient(90deg, transparent 95%, rgba(0,0,0,0.1) 50%);
-            background-size: 20px 20px; /* Grid pattern */
-        }
-        .sun {
-            position: absolute; top: 10%; right: 10%; width: 80px; height: 80px;
-            background: #ffd700;
-            border: 4px solid #000;
-            box-shadow: 8px 8px 0px #000;
-        }
-        .cloud {
-            background: #fff; width: 120px; height: 40px;
-            position: absolute; opacity: 1;
-            border: 4px solid #000;
-            box-shadow: 8px 8px 0px rgba(0,0,0,0.2);
-            animation: move-cloud linear infinite;
-        }
-        /* Pixelated cloud shapes using pseudo elements */
-        .cloud:after {
-            content: ''; position: absolute; 
-            top: -20px; left: 20px; width: 40px; height: 20px;
-            background: #fff; border: 4px solid #000; border-bottom: none;
-        }
-        .c1 { top: 20%; left: -20%; animation-duration: 25s; }
-        .c2 { top: 40%; left: -20%; animation-duration: 35s; animation-delay: 5s; transform: scale(0.8); }
-        @keyframes move-cloud { 0% { left: -150px; } 100% { left: 110%; } }
+			* {
+				box-sizing: border-box;
+				-webkit-tap-highlight-color: transparent;
+			}
 
-        /* --- DASHBOARD GRID --- */
-        .dashboard {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            grid-template-rows: auto 1fr;
-            gap: 20px;
-            width: 100%;
-            max-width: 900px;
-            height: 80vh;
-            max-height: 600px;
-        }
+			body {
+				font-family: "Press Start 2P", cursive;
+				margin: 0;
+				padding: 20px;
+				min-height: 100vh;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				color: var(--text-color);
+				overflow: hidden;
+				background-color: var(--bg-color);
+				image-rendering: pixelated;
+			}
 
-        /* --- RETRO CARDS --- */
-        .card {
-            background: var(--card-bg);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 4px solid var(--border-color);
-            box-shadow: 8px 8px 0px var(--border-color);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        /* Header Area */
-        .header-card {
-            grid-column: 1 / -1;
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 30px;
-            height: auto;
-            min-height: 100px;
-        }
-        .room-info h1 { margin: 0; font-size: 1.2rem; line-height: 1.5; text-transform: uppercase; }
-        .room-info p { margin: 5px 0 0; font-size: 0.6rem; opacity: 0.8; }
-        .status-dot {
-            width: 20px; height: 20px;
-            background: #ff4d4d; border: 4px solid #000;
-            box-shadow: 4px 4px 0px #000;
-        }
-        .status-dot.connected { background: #34c759; }
+			/* --- PIXEL SKY BACKGROUND --- */
+			.sky-container {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				z-index: -1;
+				background: var(--bg-color);
+				background-image: linear-gradient(
+						transparent 95%,
+						rgba(0, 0, 0, 0.1) 50%
+					),
+					linear-gradient(
+						90deg,
+						transparent 95%,
+						rgba(0, 0, 0, 0.1) 50%
+					);
+				background-size: 20px 20px; /* Grid pattern */
+			}
+			.sun {
+				position: absolute;
+				top: 10%;
+				right: 10%;
+				width: 80px;
+				height: 80px;
+				background: #ffd700;
+				border: 4px solid #000;
+				box-shadow: 8px 8px 0px #000;
+			}
+			.cloud {
+				background: #fff;
+				width: 120px;
+				height: 40px;
+				position: absolute;
+				opacity: 1;
+				border: 4px solid #000;
+				box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.2);
+				animation: move-cloud linear infinite;
+			}
+			/* Pixelated cloud shapes using pseudo elements */
+			.cloud:after {
+				content: "";
+				position: absolute;
+				top: -20px;
+				left: 20px;
+				width: 40px;
+				height: 20px;
+				background: #fff;
+				border: 4px solid #000;
+				border-bottom: none;
+			}
+			.c1 {
+				top: 20%;
+				left: -20%;
+				animation-duration: 25s;
+			}
+			.c2 {
+				top: 40%;
+				left: -20%;
+				animation-duration: 35s;
+				animation-delay: 5s;
+				transform: scale(0.8);
+			}
+			@keyframes move-cloud {
+				0% {
+					left: -150px;
+				}
+				100% {
+					left: 110%;
+				}
+			}
 
-        /* Main Control (Left) */
-        .main-card {
-            justify-content: space-between;
-            align-items: center;
-            text-align: center;
-        }
-        .temp-display {
-            position: relative;
-            width: 200px; height: 200px;
-            display: flex; justify-content: center; align-items: center;
-            margin-top: 10px;
-            background: #f0f0f0;
-            border: 4px solid #000;
-            box-shadow: inset 4px 4px 0px rgba(0,0,0,0.1);
-        }
-        .temp-ring { display: none; } /* Remove ring */
-        .temp-value { font-size: 4rem; letter-spacing: -2px; }
-        .temp-unit { font-size: 1.5rem; vertical-align: super; margin-left: 5px; }
-        
-        .power-btn {
-            width: 80px; height: 80px; border: 4px solid #000;
-            background: #fff;
-            color: #ff6b6b; cursor: pointer;
-            display: flex; justify-content: center; align-items: center;
-            box-shadow: 4px 4px 0px #000;
-            transition: none;
-            margin-top: 20px;
-        }
-        .power-btn svg { width: 36px; height: 36px; fill: currentColor; }
-        .power-btn:active { transform: translate(4px, 4px); box-shadow: none; }
-        .power-btn.active {
-            background: #34c759; color: #000;
-        }
+			/* --- DASHBOARD GRID --- */
+			.dashboard {
+				display: grid;
+				grid-template-columns: 1fr 1.2fr;
+				grid-template-rows: auto 1fr;
+				gap: 20px;
+				width: 100%;
+				max-width: 900px;
+				height: 80vh;
+				max-height: 600px;
+			}
 
-        /* Controls & Stats (Right) */
-        .controls-card {
-            gap: 20px;
-        }
-        .section-label {
-            font-size: 0.6rem; text-transform: uppercase;
-            margin-bottom: 10px; font-weight: bold;
-            text-decoration: underline; text-decoration-thickness: 2px;
-        }
+			/* --- RETRO CARDS --- */
+			.card {
+				background: var(--card-bg);
+				backdrop-filter: blur(8px);
+				-webkit-backdrop-filter: blur(8px);
+				border: 4px solid var(--border-color);
+				box-shadow: 8px 8px 0px var(--border-color);
+				padding: 20px;
+				display: flex;
+				flex-direction: column;
+				position: relative;
+				overflow: hidden;
+			}
 
-        /* Mode Grid */
-        .mode-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-        .mode-btn {
-            background: #fff; border: 4px solid #000;
-            padding: 10px 0; cursor: pointer;
-            display: flex; flex-direction: column; align-items: center; gap: 8px;
-            box-shadow: 4px 4px 0px #000;
-        }
-        .mode-btn svg { width: 24px; height: 24px; fill: currentColor; }
-        .mode-btn span { font-size: 0.5rem; }
-        .mode-btn:active { transform: translate(4px, 4px); box-shadow: none; }
-        .mode-btn.active {
-            background: #000; color: #fff;
-        }
+			/* Header Area */
+			.header-card {
+				grid-column: 1 / -1;
+				display: flex;
+				flex-direction: row;
+				justify-content: space-between;
+				align-items: center;
+				padding: 15px 30px;
+				height: auto;
+				min-height: 100px;
+			}
+			.room-info h1 {
+				margin: 0;
+				font-size: 1.2rem;
+				line-height: 1.5;
+				text-transform: uppercase;
+			}
+			.room-info p {
+				margin: 5px 0 0;
+				font-size: 0.6rem;
+				opacity: 0.8;
+			}
+			.status-dot {
+				width: 20px;
+				height: 20px;
+				background: #ff4d4d;
+				border: 4px solid #000;
+				box-shadow: 4px 4px 0px #000;
+			}
+			.status-dot.connected {
+				background: #34c759;
+			}
 
-        /* Fan Speed */
-        .fan-controls {
-            background: #fff; border: 4px solid #000;
-            display: flex; justify-content: space-between;
-            box-shadow: 4px 4px 0px #000;
-        }
-        .fan-opt {
-            flex: 1; text-align: center; padding: 10px 5px;
-            font-size: 0.5rem; cursor: pointer;
-            color: #000; border-right: 4px solid #000;
-        }
-        .fan-opt:last-child { border-right: none; }
-        .fan-opt.active {
-            background: #000; color: #fff;
-        }
+			/* Main Control (Left) */
+			.main-card {
+				justify-content: space-between;
+				align-items: center;
+				text-align: center;
+			}
+			.temp-display {
+				position: relative;
+				width: 200px;
+				height: 200px;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				margin-top: 10px;
+				background: #f0f0f0;
+				border: 4px solid #000;
+				box-shadow: inset 4px 4px 0px rgba(0, 0, 0, 0.1);
+			}
+			.temp-ring {
+				display: none;
+			} /* Remove ring */
+			.temp-value {
+				font-size: 4rem;
+				letter-spacing: -2px;
+			}
+			.temp-unit {
+				font-size: 1.5rem;
+				vertical-align: super;
+				margin-left: 5px;
+			}
 
-        /* Graph Area */
-        .graph-area {
-            flex: 1;
-            background: #fff;
-            border: 4px solid #000;
-            box-shadow: 4px 4px 0px #000;
-            padding: 10px;
-            position: relative;
-            min-height: 150px;
-        }
+			.power-btn {
+				width: 80px;
+				height: 80px;
+				border: 4px solid #000;
+				background: #fff;
+				color: #ff6b6b;
+				cursor: pointer;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				box-shadow: 4px 4px 0px #000;
+				transition: none;
+				margin-top: 20px;
+			}
+			.power-btn svg {
+				width: 36px;
+				height: 36px;
+				fill: currentColor;
+			}
+			.power-btn:active {
+				transform: translate(4px, 4px);
+				box-shadow: none;
+			}
+			.power-btn.active {
+				background: #34c759;
+				color: #000;
+			}
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            body { overflow-y: auto; height: auto; display: block; }
-            .dashboard {
-                display: flex; flex-direction: column;
-                height: auto; max-height: none;
-            }
-            .header-card { margin-bottom: 0; }
-            .main-card { padding: 40px 20px; }
-            .temp-display { width: 180px; height: 180px; }
-            .temp-value { font-size: 3rem; }
-            .graph-area { height: 200px; }
-        }
-    </style>
-</head>
-<body>
+			/* Controls & Stats (Right) */
+			.controls-card {
+				gap: 20px;
+			}
+			.section-label {
+				font-size: 0.6rem;
+				text-transform: uppercase;
+				margin-bottom: 10px;
+				font-weight: bold;
+				text-decoration: underline;
+				text-decoration-thickness: 2px;
+			}
 
-    <div class="sky-container">
-        <div class="sun"></div>
-        <div class="cloud c1"></div>
-        <div class="cloud c2"></div>
-    </div>
+			/* Mode Grid */
+			.mode-grid {
+				display: grid;
+				grid-template-columns: repeat(3, 1fr);
+				gap: 12px;
+			}
+			.mode-btn {
+				background: #fff;
+				border: 4px solid #000;
+				padding: 10px 0;
+				cursor: pointer;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 8px;
+				box-shadow: 4px 4px 0px #000;
+			}
+			.mode-btn svg {
+				width: 24px;
+				height: 24px;
+				fill: currentColor;
+			}
+			.mode-btn span {
+				font-size: 0.5rem;
+			}
+			.mode-btn:active {
+				transform: translate(4px, 4px);
+				box-shadow: none;
+			}
+			.mode-btn.active {
+				background: #000;
+				color: #fff;
+			}
 
-    <div class="dashboard">
-        <!-- Header -->
-        <div class="card header-card">
-            <div class="room-info">
-                <h1>Master Bedroom</h1>
-                <p>Panasonic Inverter AC</p>
-            </div>
-            <div id="connDot" class="status-dot"></div>
-        </div>
+			/* Fan Speed */
+			.fan-controls {
+				background: #fff;
+				border: 4px solid #000;
+				display: flex;
+				justify-content: space-between;
+				box-shadow: 4px 4px 0px #000;
+			}
+			.fan-opt {
+				flex: 1;
+				text-align: center;
+				padding: 10px 5px;
+				font-size: 0.5rem;
+				cursor: pointer;
+				color: #000;
+				border-right: 4px solid #000;
+			}
+			.fan-opt:last-child {
+				border-right: none;
+			}
+			.fan-opt.active {
+				background: #000;
+				color: #fff;
+			}
 
-        <!-- Main Controls -->
-        <div class="card main-card">
-            <div class="temp-display">
-                <div class="temp-ring"></div>
-                <div>
-                    <span class="temp-value" id="tempValue">--</span><span class="temp-unit">°C</span>
-                </div>
-            </div>
-            
-            <button id="powerBtn" class="power-btn" onclick="togglePower()">
-                <svg viewBox="0 0 24 24"><path d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42C17.99 7.86 19 9.81 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.19 1.01-4.14 2.58-5.42L6.17 5.17C4.23 6.82 3 9.26 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9c0-2.74-1.23-5.18-3.17-6.83z"/></svg>
-            </button>
-        </div>
-        <!-- Secondary Controls & Graph -->
-        <div class="card controls-card">
-            <div>
-                <div class="section-label">Operation Mode</div>
-                <div class="mode-grid">
-                    <div class="mode-btn" id="mode-cool" onclick="setMode('cool')">
-                        <svg viewBox="0 0 24 24"><path d="M14 6V4h-4v2h4zM4 8v11h16V8H4zm16-2c1.11 0 2 .89 2 2v11c0 1.11-.89 2-2 2H4c-1.11 0-2-.89-2-2V8c0-1.11.89-2 2-2h16z"/></svg>
-                        <span>Cool</span>
-                    </div>
-                    <div class="mode-btn" id="mode-dry" onclick="setMode('dry')">
-                        <svg viewBox="0 0 24 24"><path d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8zm0 18c-3.35 0-6-2.57-6-6.2 0-2.34 1.95-5.44 6-9.14 4.05 3.7 6 6.8 6 9.14 0 3.63-2.65 6.2-6 6.2z"/></svg>
-                        <span>Dry</span>
-                    </div>
-                    <div class="mode-btn" id="mode-fan" onclick="setMode('fan')">
-                        <svg viewBox="0 0 24 24"><path d="M12 11c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1m0-9c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2m0 18c4.41 0 8-3.59 8-8s-3.59-8-8-8-8 3.59-8 8 3.59 8 8 8z"/></svg>
-                        <span>Fan</span>
-                    </div>
-                </div>
-            </div>
+			/* Graph Area */
+			.graph-area {
+				flex: 1;
+				background: #fff;
+				border: 4px solid #000;
+				box-shadow: 4px 4px 0px #000;
+				padding: 10px;
+				position: relative;
+				min-height: 150px;
+			}
 
-            <div>
-                <div class="section-label">Fan Speed</div>
-                <div class="fan-controls">
-                    <div class="fan-opt" id="fan-low" onclick="setFan('low')">Low</div>
-                    <div class="fan-opt" id="fan-med" onclick="setFan('med')">Med</div>
-                    <div class="fan-opt" id="fan-high" onclick="setFan('high')">High</div>
-                    <div class="fan-opt" id="fan-auto" onclick="setFan('auto')">Auto</div>
-                </div>
-            </div>
+			/* Responsive */
+			@media (max-width: 768px) {
+				body {
+					overflow-y: auto;
+					height: auto;
+					display: block;
+				}
+				.dashboard {
+					display: flex;
+					flex-direction: column;
+					height: auto;
+					max-height: none;
+				}
+				.header-card {
+					margin-bottom: 0;
+				}
+				.main-card {
+					padding: 40px 20px;
+				}
+				.temp-display {
+					width: 180px;
+					height: 180px;
+				}
+				.temp-value {
+					font-size: 3rem;
+				}
+				.graph-area {
+					height: 200px;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div class="sky-container">
+			<div class="sun"></div>
+			<div class="cloud c1"></div>
+			<div class="cloud c2"></div>
+		</div>
 
-            <div class="graph-area">
-                <canvas id="tempChart"></canvas>
-            </div>
-        </div>
-    </div>
+		<div class="dashboard">
+			<!-- Header -->
+			<div class="card header-card">
+				<div class="room-info">
+					<h1>Master Bedroom</h1>
+					<p>Panasonic Inverter AC</p>
+				</div>
+				<div id="connDot" class="status-dot"></div>
+			</div>
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        let state = { roomTemp: 26, power: false, mode: 'cool', fanSpeed: 'auto', history: [] };
-        let tempChart;
-        let socket;
+			<!-- Main Controls -->
+			<div class="card main-card">
+				<div class="temp-display">
+					<div class="temp-ring"></div>
+					<div>
+						<span class="temp-value" id="tempValue">--</span
+						><span class="temp-unit">°C</span>
+					</div>
+				</div>
 
-        if (typeof io !== 'undefined') {
-            socket = io();
-        } else {
-            console.log("Preview Mode");
-            socket = { on: () => {}, emit: (e,d) => console.log(e,d) };
-        }
+				<button id="powerBtn" class="power-btn" onclick="togglePower()">
+					<svg viewBox="0 0 24 24">
+						<path
+							d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42C17.99 7.86 19 9.81 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.19 1.01-4.14 2.58-5.42L6.17 5.17C4.23 6.82 3 9.26 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9c0-2.74-1.23-5.18-3.17-6.83z"
+						/>
+					</svg>
+				</button>
+			</div>
+			<!-- Secondary Controls & Graph -->
+			<div class="card controls-card">
+				<div>
+					<div class="section-label">Operation Mode</div>
+					<div class="mode-grid">
+						<div
+							class="mode-btn"
+							id="mode-cool"
+							onclick="setMode('cool')"
+						>
+							<svg viewBox="0 0 24 24">
+								<path
+									d="M14 6V4h-4v2h4zM4 8v11h16V8H4zm16-2c1.11 0 2 .89 2 2v11c0 1.11-.89 2-2 2H4c-1.11 0-2-.89-2-2V8c0-1.11.89-2 2-2h16z"
+								/>
+							</svg>
+							<span>Cool</span>
+						</div>
+						<div
+							class="mode-btn"
+							id="mode-dry"
+							onclick="setMode('dry')"
+						>
+							<svg viewBox="0 0 24 24">
+								<path
+									d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8zm0 18c-3.35 0-6-2.57-6-6.2 0-2.34 1.95-5.44 6-9.14 4.05 3.7 6 6.8 6 9.14 0 3.63-2.65 6.2-6 6.2z"
+								/>
+							</svg>
+							<span>Dry</span>
+						</div>
+						<div
+							class="mode-btn"
+							id="mode-fan"
+							onclick="setMode('fan')"
+						>
+							<svg viewBox="0 0 24 24">
+								<path
+									d="M12 11c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1m0-9c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2m0 18c4.41 0 8-3.59 8-8s-3.59-8-8-8-8 3.59-8 8 3.59 8 8 8z"
+								/>
+							</svg>
+							<span>Fan</span>
+						</div>
+					</div>
+				</div>
 
-        const connDot = document.getElementById('connDot');
-        socket.on('connect', () => connDot.classList.add('connected'));
-        socket.on('disconnect', () => connDot.classList.remove('connected'));
-        socket.on('web_update', (data) => {
-            state = { ...state, ...data };
-            renderUI();
-        });
+				<div>
+					<div class="section-label">Fan Speed</div>
+					<div class="fan-controls">
+						<div
+							class="fan-opt"
+							id="fan-low"
+							onclick="setFan('low')"
+						>
+							Low
+						</div>
+						<div
+							class="fan-opt"
+							id="fan-med"
+							onclick="setFan('med')"
+						>
+							Med
+						</div>
+						<div
+							class="fan-opt"
+							id="fan-high"
+							onclick="setFan('high')"
+						>
+							High
+						</div>
+						<div
+							class="fan-opt"
+							id="fan-auto"
+							onclick="setFan('auto')"
+						>
+							Auto
+						</div>
+					</div>
+				</div>
 
-        function togglePower() {
-            state.power = !state.power;
-            renderUI();
-            socket.emit('web_command', { action: 'power', value: state.power });
-        }
-        function setMode(m) {
-            state.mode = m;
-            renderUI();
-            socket.emit('web_command', { action: 'set_mode', value: m });
-        }
-        function setFan(f) {
-            state.fanSpeed = f;
-            renderUI();
-            socket.emit('web_command', { action: 'set_fan', value: f });
-        }
+				<div class="graph-area">
+					<canvas id="tempChart"></canvas>
+				</div>
+			</div>
+		</div>
 
-        function renderUI() {
-            document.getElementById('tempValue').innerText = state.roomTemp;
-            
-            const pBtn = document.getElementById('powerBtn');
-            if(state.power) pBtn.classList.add('active'); else pBtn.classList.remove('active');
-            
-            document.querySelectorAll('.mode-btn').forEach(el => el.classList.remove('active'));
-            const mBtn = document.getElementById('mode-' + state.mode);
-            if(mBtn) mBtn.classList.add('active');
-            
-            document.querySelectorAll('.fan-opt').forEach(el => el.classList.remove('active'));
-            const fBtn = document.getElementById('fan-' + state.fanSpeed);
-            if(fBtn) fBtn.classList.add('active');
+		<script src="/socket.io/socket.io.js"></script>
+		<script>
+			        let state = { roomTemp: 26, power: false, mode: 'cool', fanSpeed: 'auto', history: [] };
+			        let tempChart;
+			        let socket;
 
-            if(tempChart && state.history.length > 0) {
-                tempChart.data.datasets[0].data = state.history;
-                tempChart.update();
-            }
-        }
+			        if (typeof io !== 'undefined') {
+			            socket = io();
+			        } else {
+			            console.log("Preview Mode");
+			            socket = { on: () => {}, emit: (e,d) => console.log(e,d) };
+			        }
 
-        window.onload = function() {
-            const ctx = document.getElementById('tempChart').getContext('2d');
-            
-            tempChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: Array(10).fill(''),
-                    datasets: [{
-                        data: [26, 24, 22, 25, 24, 27],
-                        borderColor: '#000',
-                        backgroundColor: 'rgba(0,0,0,0.1)',
-                        borderWidth: 4,
-                        tension: 0, /* Pixelated lines */
-                        pointRadius: 4,
-                        pointBackgroundColor: '#000',
-                        pointBorderColor: '#000',
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { 
-        .mode-btn span { font-size: 0.5rem; }
-        .mode-btn:active { transform: translate(4px, 4px); box-shadow: none; }
-        .mode-btn.active {
-            background: #000; color: #fff;
-        }
+			        const connDot = document.getElementById('connDot');
+			        socket.on('connect', () => connDot.classList.add('connected'));
+			        socket.on('disconnect', () => connDot.classList.remove('connected'));
+			        socket.on('web_update', (data) => {
+			            state = { ...state, ...data };
+			            renderUI();
+			        });
 
-        /* Fan Speed */
-        .fan-controls {
-            background: #fff; border: 4px solid #000;
-            display: flex; justify-content: space-between;
-            box-shadow: 4px 4px 0px #000;
-        }
-        .fan-opt {
-            flex: 1; text-align: center; padding: 10px 5px;
-            font-size: 0.5rem; cursor: pointer;
-            color: #000; border-right: 4px solid #000;
-        }
-        .fan-opt:last-child { border-right: none; }
-        .fan-opt.active {
-            background: #000; color: #fff;
-        }
+			        function togglePower() {
+			            state.power = !state.power;
+			            renderUI();
+			            socket.emit('web_command', { action: 'power', value: state.power });
+			        }
+			        function setMode(m) {
+			            state.mode = m;
+			            renderUI();
+			            socket.emit('web_command', { action: 'set_mode', value: m });
+			        }
+			        function setFan(f) {
+			            state.fanSpeed = f;
+			            renderUI();
+			            socket.emit('web_command', { action: 'set_fan', value: f });
+			        }
 
-        /* Graph Area */
-        .graph-area {
-            flex: 1;
-            background: #fff;
-            border: 4px solid #000;
-            box-shadow: 4px 4px 0px #000;
-            padding: 10px;
-            position: relative;
-            min-height: 150px;
-        }
+			        function renderUI() {
+			            document.getElementById('tempValue').innerText = state.roomTemp;
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            body { overflow-y: auto; height: auto; display: block; }
-            .dashboard {
-                display: flex; flex-direction: column;
-                height: auto; max-height: none;
-            }
-            .header-card { margin-bottom: 0; }
-            .main-card { padding: 40px 20px; }
-            .temp-display { width: 180px; height: 180px; }
-            .temp-value { font-size: 3rem; }
-            .graph-area { height: 200px; }
-        }
-    </style>
-</head>
-<body>
+			            const pBtn = document.getElementById('powerBtn');
+			            if(state.power) pBtn.classList.add('active'); else pBtn.classList.remove('active');
 
-    <div class="sky-container">
-        <div class="sun"></div>
-        <div class="cloud c1"></div>
-        <div class="cloud c2"></div>
-    </div>
+			            document.querySelectorAll('.mode-btn').forEach(el => el.classList.remove('active'));
+			            const mBtn = document.getElementById('mode-' + state.mode);
+			            if(mBtn) mBtn.classList.add('active');
 
-    <div class="dashboard">
-        <!-- Header -->
-        <div class="card header-card">
-            <div class="room-info">
-                <h1>Master Bedroom</h1>
-                <p>Panasonic Inverter AC</p>
-            </div>
-            <div id="connDot" class="status-dot"></div>
-        </div>
+			            document.querySelectorAll('.fan-opt').forEach(el => el.classList.remove('active'));
+			            const fBtn = document.getElementById('fan-' + state.fanSpeed);
+			            if(fBtn) fBtn.classList.add('active');
 
-        <!-- Main Controls -->
-        <div class="card main-card">
-            <div class="temp-display">
-                <div class="temp-ring"></div>
-                <div>
-                    <span class="temp-value" id="tempValue">--</span><span class="temp-unit">°C</span>
-                </div>
-            </div>
-            
-            <button id="powerBtn" class="power-btn" onclick="togglePower()">
-                <svg viewBox="0 0 24 24"><path d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42C17.99 7.86 19 9.81 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.19 1.01-4.14 2.58-5.42L6.17 5.17C4.23 6.82 3 9.26 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9c0-2.74-1.23-5.18-3.17-6.83z"/></svg>
-            </button>
-        </div>
-        <!-- Secondary Controls & Graph -->
-        <div class="card controls-card">
-            <div>
-                <div class="section-label">Operation Mode</div>
-                <div class="mode-grid">
-                    <div class="mode-btn" id="mode-cool" onclick="setMode('cool')">
-                        <svg viewBox="0 0 24 24"><path d="M14 6V4h-4v2h4zM4 8v11h16V8H4zm16-2c1.11 0 2 .89 2 2v11c0 1.11-.89 2-2 2H4c-1.11 0-2-.89-2-2V8c0-1.11.89-2 2-2h16z"/></svg>
-                        <span>Cool</span>
-                    </div>
-                    <div class="mode-btn" id="mode-dry" onclick="setMode('dry')">
-                        <svg viewBox="0 0 24 24"><path d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8zm0 18c-3.35 0-6-2.57-6-6.2 0-2.34 1.95-5.44 6-9.14 4.05 3.7 6 6.8 6 9.14 0 3.63-2.65 6.2-6 6.2z"/></svg>
-                        <span>Dry</span>
-                    </div>
-                    <div class="mode-btn" id="mode-fan" onclick="setMode('fan')">
-                        <svg viewBox="0 0 24 24"><path d="M12 11c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1m0-9c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2m0 18c4.41 0 8-3.59 8-8s-3.59-8-8-8-8 3.59-8 8 3.59 8 8 8z"/></svg>
-                        <span>Fan</span>
-                    </div>
-                </div>
-            </div>
+			            if(tempChart && state.history.length > 0) {
+			                tempChart.data.datasets[0].data = state.history;
+			                tempChart.update();
+			            }
+			        }
 
-            <div>
-                <div class="section-label">Fan Speed</div>
-                <div class="fan-controls">
-                    <div class="fan-opt" id="fan-low" onclick="setFan('low')">Low</div>
-                    <div class="fan-opt" id="fan-med" onclick="setFan('med')">Med</div>
-                    <div class="fan-opt" id="fan-high" onclick="setFan('high')">High</div>
-                    <div class="fan-opt" id="fan-auto" onclick="setFan('auto')">Auto</div>
-                </div>
-            </div>
+			        window.onload = function() {
+			            const ctx = document.getElementById('tempChart').getContext('2d');
 
-            <div class="graph-area">
-                <canvas id="tempChart"></canvas>
-            </div>
-        </div>
-    </div>
+			            tempChart = new Chart(ctx, {
+			                type: 'line',
+			                data: {
+			                    labels: Array(10).fill(''),
+			                    datasets: [{
+			                        data: [],
+			                        borderColor: '#000',
+			                        backgroundColor: 'rgba(0,0,0,0.1)',
+			                        borderWidth: 4,
+			                        tension: 0, /* Pixelated lines */
+			                        pointRadius: 4,
+			                        pointBackgroundColor: '#000',
+			                        pointBorderColor: '#000',
+			                        fill: true
+			                    }]
+			                },
+			                options: {
+			                    responsive: true,
+			                    maintainAspectRatio: false,
+			                    plugins: {
+			        .mode-btn span { font-size: 0.5rem; }
+			        .mode-btn:active { transform: translate(4px, 4px); box-shadow: none; }
+			        .mode-btn.active {
+			            background: #000; color: #fff;
+			        }
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        let state = { roomTemp: 26, power: false, mode: 'cool', fanSpeed: 'auto', history: [] };
-        let tempChart;
-        let socket;
+			        /* Fan Speed */
+			        .fan-controls {
+			            background: #fff; border: 4px solid #000;
+			            display: flex; justify-content: space-between;
+			            box-shadow: 4px 4px 0px #000;
+			        }
+			        .fan-opt {
+			            flex: 1; text-align: center; padding: 10px 5px;
+			            font-size: 0.5rem; cursor: pointer;
+			            color: #000; border-right: 4px solid #000;
+			        }
+			        .fan-opt:last-child { border-right: none; }
+			        .fan-opt.active {
+			            background: #000; color: #fff;
+			        }
 
-        if (typeof io !== 'undefined') {
-            socket = io();
-        } else {
-            console.log("Preview Mode");
-            socket = { on: () => {}, emit: (e,d) => console.log(e,d) };
-        }
+			        /* Graph Area */
+			        .graph-area {
+			            flex: 1;
+			            background: #fff;
+			            border: 4px solid #000;
+			            box-shadow: 4px 4px 0px #000;
+			            padding: 10px;
+			            position: relative;
+			            min-height: 150px;
+			        }
 
-        const connDot = document.getElementById('connDot');
-        socket.on('connect', () => connDot.classList.add('connected'));
-        socket.on('disconnect', () => connDot.classList.remove('connected'));
-        socket.on('web_update', (data) => {
-            state = { ...state, ...data };
-            renderUI();
-        });
+			        /* Responsive */
+			        @media (max-width: 768px) {
+			            body { overflow-y: auto; height: auto; display: block; }
+			            .dashboard {
+			                display: flex; flex-direction: column;
+			                height: auto; max-height: none;
+			            }
+			            .header-card { margin-bottom: 0; }
+			            .main-card { padding: 40px 20px; }
+			            .temp-display { width: 180px; height: 180px; }
+			            .temp-value { font-size: 3rem; }
+			            .graph-area { height: 200px; }
+			        }
+			    </style>
+			</head>
+			<body>
 
-        async function sendCommand(data) {
-            try {
-                await fetch('/api/command', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-            } catch (e) {
-                console.error("Error sending command:", e);
-            }
-        }
+			    <div class="sky-container">
+			        <div class="sun"></div>
+			        <div class="cloud c1"></div>
+			        <div class="cloud c2"></div>
+			    </div>
 
-        function togglePower() {
-            state.power = !state.power;
-            renderUI();
-            sendCommand({ action: 'power', value: state.power });
-        }
-        function setMode(m) {
-            state.mode = m;
-            renderUI();
-            sendCommand({ action: 'set_mode', value: m });
-        }
-        function setFan(f) {
-            state.fanSpeed = f;
-            renderUI();
-            sendCommand({ action: 'set_fan', value: f });
-        }
+			    <div class="dashboard">
+			        <!-- Header -->
+			        <div class="card header-card">
+			            <div class="room-info">
+			                <h1>Master Bedroom</h1>
+			                <p>Panasonic Inverter AC</p>
+			            </div>
+			            <div id="connDot" class="status-dot"></div>
+			        </div>
 
-        function renderUI() {
-            document.getElementById('tempValue').innerText = state.roomTemp;
-            
-            const pBtn = document.getElementById('powerBtn');
-            if(state.power) pBtn.classList.add('active'); else pBtn.classList.remove('active');
-            
-            document.querySelectorAll('.mode-btn').forEach(el => el.classList.remove('active'));
-            const mBtn = document.getElementById('mode-' + state.mode);
-            if(mBtn) mBtn.classList.add('active');
-            
-            document.querySelectorAll('.fan-opt').forEach(el => el.classList.remove('active'));
-            const fBtn = document.getElementById('fan-' + state.fanSpeed);
-            if(fBtn) fBtn.classList.add('active');
+			        <!-- Main Controls -->
+			        <div class="card main-card">
+			            <div class="temp-display">
+			                <div class="temp-ring"></div>
+			                <div>
+			                    <span class="temp-value" id="tempValue">--</span><span class="temp-unit">°C</span>
+			                </div>
+			            </div>
 
-            if(tempChart && state.history.length > 0) {
-                tempChart.data.datasets[0].data = state.history;
-                tempChart.update();
-            }
-        }
+			            <button id="powerBtn" class="power-btn" onclick="togglePower()">
+			                <svg viewBox="0 0 24 24"><path d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42C17.99 7.86 19 9.81 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.19 1.01-4.14 2.58-5.42L6.17 5.17C4.23 6.82 3 9.26 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9c0-2.74-1.23-5.18-3.17-6.83z"/></svg>
+			            </button>
+			        </div>
+			        <!-- Secondary Controls & Graph -->
+			        <div class="card controls-card">
+			            <div>
+			                <div class="section-label">Operation Mode</div>
+			                <div class="mode-grid">
+			                    <div class="mode-btn" id="mode-cool" onclick="setMode('cool')">
+			                        <svg viewBox="0 0 24 24"><path d="M14 6V4h-4v2h4zM4 8v11h16V8H4zm16-2c1.11 0 2 .89 2 2v11c0 1.11-.89 2-2 2H4c-1.11 0-2-.89-2-2V8c0-1.11.89-2 2-2h16z"/></svg>
+			                        <span>Cool</span>
+			                    </div>
+			                    <div class="mode-btn" id="mode-dry" onclick="setMode('dry')">
+			                        <svg viewBox="0 0 24 24"><path d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8zm0 18c-3.35 0-6-2.57-6-6.2 0-2.34 1.95-5.44 6-9.14 4.05 3.7 6 6.8 6 9.14 0 3.63-2.65 6.2-6 6.2z"/></svg>
+			                        <span>Dry</span>
+			                    </div>
+			                    <div class="mode-btn" id="mode-fan" onclick="setMode('fan')">
+			                        <svg viewBox="0 0 24 24"><path d="M12 11c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1m0-9c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2m0 18c4.41 0 8-3.59 8-8s-3.59-8-8-8-8 3.59-8 8 3.59 8 8 8z"/></svg>
+			                        <span>Fan</span>
+			                    </div>
+			                </div>
+			            </div>
 
-        window.onload = function() {
-            const ctx = document.getElementById('tempChart').getContext('2d');
-            
-            tempChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: Array.from({length: 25}, (_, i) => i + ':00'),
-                    datasets: [{
-                        data: [26, 25, 24, 23, 23, 22, 22, 23, 24, 25, 26, 28, 30, 31, 31, 30, 29, 28, 27, 26, 25, 25, 26, 26, 26],
-                        borderColor: '#000',
-                        backgroundColor: 'rgba(0,0,0,0.1)',
-                        borderWidth: 4,
-                        tension: 0, /* Pixelated lines */
-                        pointRadius: 4,
-                        pointBackgroundColor: '#000',
-                        pointBorderColor: '#000',
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { display: false }, 
-                        tooltip: { 
-                            enabled: true,
-                            backgroundColor: '#000',
-                            titleFont: { family: "'Press Start 2P', cursive" },
-                            bodyFont: { family: "'Press Start 2P', cursive" },
-                            cornerRadius: 0,
-                            displayColors: false
-                        } 
-                    },
-                    scales: {
-                        x: { 
-                            display: true,
-                            title: {
-                                display: true,
-                                text: 'Time',
-                                font: { family: "'Press Start 2P', cursive", size: 10 },
-                                color: '#000'
-                            },
-                            ticks: {
-                                font: { family: "'Press Start 2P', cursive", size: 8 },
-                                color: '#000',
-                                maxTicksLimit: 5
-                            },
-                            grid: {
-                                color: 'rgba(0,0,0,0.1)',
-                                borderColor: '#000',
-                                tickColor: '#000'
-                            }
-                        },
-                        y: { 
-                            display: true, 
-                            min: 16, 
-                            max: 32,
-                            title: {
-                                display: true,
-                                text: 'Temp',
-                                font: { family: "'Press Start 2P', cursive", size: 10 },
-                                color: '#000'
-                            },
-                            ticks: {
-                                font: { family: "'Press Start 2P', cursive", size: 8 },
-                                color: '#000'
-                            },
-                            grid: {
-                                color: 'rgba(0,0,0,0.1)',
-                                borderColor: '#000',
-                                tickColor: '#000'
-                            }
-                        }
-                    },
-                    animation: false
-                }
-            });
-        };
-    </script>
-</body>
+			            <div>
+			                <div class="section-label">Fan Speed</div>
+			                <div class="fan-controls">
+			                    <div class="fan-opt" id="fan-low" onclick="setFan('low')">Low</div>
+			                    <div class="fan-opt" id="fan-med" onclick="setFan('med')">Med</div>
+			                    <div class="fan-opt" id="fan-high" onclick="setFan('high')">High</div>
+			                    <div class="fan-opt" id="fan-auto" onclick="setFan('auto')">Auto</div>
+			                </div>
+			            </div>
+
+			            <div class="graph-area">
+			                <canvas id="tempChart"></canvas>
+			            </div>
+			        </div>
+			    </div>
+
+			    <script src="/socket.io/socket.io.js">
+		</script>
+		<script>
+			let state = {
+				roomTemp: 26,
+				power: false,
+				mode: "cool",
+				fanSpeed: "auto",
+				history: [],
+			};
+			let tempChart;
+			let socket;
+
+			if (typeof io !== "undefined") {
+				socket = io();
+			} else {
+				console.log("Preview Mode");
+				socket = { on: () => {}, emit: (e, d) => console.log(e, d) };
+			}
+
+			const connDot = document.getElementById("connDot");
+			socket.on("connect", () => connDot.classList.add("connected"));
+			socket.on("disconnect", () =>
+				connDot.classList.remove("connected")
+			);
+			socket.on("web_update", (data) => {
+				state = { ...state, ...data };
+				renderUI();
+			});
+
+			async function sendCommand(data) {
+				try {
+					await fetch("/api/command", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify(data),
+					});
+				} catch (e) {
+					console.error("Error sending command:", e);
+				}
+			}
+
+			function togglePower() {
+				state.power = !state.power;
+				renderUI();
+				sendCommand({ action: "power", value: state.power });
+			}
+			function setMode(m) {
+				state.mode = m;
+				renderUI();
+				sendCommand({ action: "set_mode", value: m });
+			}
+			function setFan(f) {
+				state.fanSpeed = f;
+				renderUI();
+				sendCommand({ action: "set_fan", value: f });
+			}
+
+			function renderUI() {
+				document.getElementById("tempValue").innerText = state.roomTemp;
+
+				const pBtn = document.getElementById("powerBtn");
+				if (state.power) pBtn.classList.add("active");
+				else pBtn.classList.remove("active");
+
+				document
+					.querySelectorAll(".mode-btn")
+					.forEach((el) => el.classList.remove("active"));
+				const mBtn = document.getElementById("mode-" + state.mode);
+				if (mBtn) mBtn.classList.add("active");
+
+				document
+					.querySelectorAll(".fan-opt")
+					.forEach((el) => el.classList.remove("active"));
+				const fBtn = document.getElementById("fan-" + state.fanSpeed);
+				if (fBtn) fBtn.classList.add("active");
+
+				if (tempChart && state.history.length > 0) {
+					tempChart.data.datasets[0].data = state.history;
+					tempChart.update();
+				}
+			}
+
+			window.onload = function () {
+				const ctx = document
+					.getElementById("tempChart")
+					.getContext("2d");
+
+				tempChart = new Chart(ctx, {
+					type: "line",
+					data: {
+						labels: Array.from({ length: 25 }, (_, i) => i + ":00"),
+						datasets: [
+							{
+								data: [],
+								borderColor: "#000",
+								backgroundColor: "rgba(0,0,0,0.1)",
+								borderWidth: 4,
+								tension: 0 /* Pixelated lines */,
+								pointRadius: 4,
+								pointBackgroundColor: "#000",
+								pointBorderColor: "#000",
+								fill: true,
+							},
+						],
+					},
+					options: {
+						responsive: true,
+						maintainAspectRatio: false,
+						plugins: {
+							legend: { display: false },
+							tooltip: {
+								enabled: true,
+								backgroundColor: "#000",
+								titleFont: {
+									family: "'Press Start 2P', cursive",
+								},
+								bodyFont: {
+									family: "'Press Start 2P', cursive",
+								},
+								cornerRadius: 0,
+								displayColors: false,
+							},
+						},
+						scales: {
+							x: {
+								display: true,
+								title: {
+									display: true,
+									text: "Time",
+									font: {
+										family: "'Press Start 2P', cursive",
+										size: 10,
+									},
+									color: "#000",
+								},
+								ticks: {
+									font: {
+										family: "'Press Start 2P', cursive",
+										size: 8,
+									},
+									color: "#000",
+									maxTicksLimit: 5,
+								},
+								grid: {
+									color: "rgba(0,0,0,0.1)",
+									borderColor: "#000",
+									tickColor: "#000",
+								},
+							},
+							y: {
+								display: true,
+								min: 16,
+								max: 32,
+								title: {
+									display: true,
+									text: "Temp",
+									font: {
+										family: "'Press Start 2P', cursive",
+										size: 10,
+									},
+									color: "#000",
+								},
+								ticks: {
+									font: {
+										family: "'Press Start 2P', cursive",
+										size: 8,
+									},
+									color: "#000",
+								},
+								grid: {
+									color: "rgba(0,0,0,0.1)",
+									borderColor: "#000",
+									tickColor: "#000",
+								},
+							},
+						},
+						animation: false,
+					},
+				});
+			};
+		</script>
+	</body>
 </html>

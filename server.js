@@ -1,7 +1,7 @@
-const express = require('express');
-const http = require('http');
+const express = require("express");
+const http = require("http");
 const { Server } = require("socket.io");
-const path = require('path');
+const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
@@ -11,63 +11,95 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 
 // Check if we are in Production or Dev
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = process.env.NODE_ENV === "production";
 
 const io = new Server(server, {
-  cors: {
-    // In production, you might want to restrict this to your frontend domain
-    // But for ESP32, keeping it "*" (Allow All) is often easiest to prevent blocking
-    origin: "*", 
-    methods: ["GET", "POST"]
-  }
+	cors: {
+		// In production, you might want to restrict this to your frontend domain
+		// But for ESP32, keeping it "*" (Allow All) is often easiest to prevent blocking
+		origin: "*",
+		methods: ["GET", "POST"],
+	},
 });
+
+// Server state to track temperature history
+const MAX_HISTORY = 20;
+let serverState = {
+	roomTemp: null,
+	power: false,
+	mode: "cool",
+	fanSpeed: "auto",
+	history: [],
+};
 
 // Middleware
 app.use(express.json()); // Enable JSON body parsing for REST API
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, "public")));
 
 // REST API Endpoint for commands
-app.post('/api/command', (req, res) => {
-  const data = req.body;
-  console.log('Command from Web (REST):', data);
-  // Relay command to ESP32 via Socket.IO
-  io.emit('esp32_command', data);
-  res.json({ status: 'success', data });
+app.post("/api/command", (req, res) => {
+	const data = req.body;
+	console.log("Command from Web (REST):", data);
+	// Relay command to ESP32 via Socket.IO
+	io.emit("esp32_command", data);
+	res.json({ status: "success", data });
 });
 
 // Serve Frontend
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.get("/", (req, res) => {
+	res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // Socket.IO Logic
-io.on('connection', (socket) => {
-  console.log(`[${new Date().toISOString()}] User connected: ${socket.id}`);
+io.on("connection", (socket) => {
+	console.log(`[${new Date().toISOString()}] User connected: ${socket.id}`);
 
-  // Handle data from ESP32
-  socket.on('esp32_message', (data) => {
-    console.log('Data received:', data);
-    // Broadcast to web clients
-    io.emit('web_update', data); 
-  });
+	// Send initial state to newly connected client
+	socket.emit("web_update", serverState);
 
-  // Handle commands from the Web Client (Legacy Socket method, kept for compatibility if needed)
-  socket.on('web_command', (data) => {
-    console.log('Command from Web (Socket):', data);
-    io.emit('esp32_command', data);
-  });
+	// Handle data from ESP32
+	socket.on("esp32_message", (data) => {
+		console.log("Data received:", data);
 
-  socket.on('disconnect', () => {
-    console.log('User disconnected');
-  });
+		// Update server state
+		serverState = { ...serverState, ...data };
+
+		// Add temperature to history if present
+		if (data.roomTemp !== undefined) {
+			serverState.history.push(data.roomTemp);
+			// Limit history size
+			if (serverState.history.length > MAX_HISTORY) {
+				serverState.history.shift();
+			}
+		}
+
+		// Broadcast to web clients with history
+		io.emit("web_update", serverState);
+	});
+
+	// Handle commands from the Web Client (Legacy Socket method, kept for compatibility if needed)
+	socket.on("web_command", (data) => {
+		console.log("Command from Web (Socket):", data);
+		io.emit("esp32_command", data);
+	});
+
+	socket.on("disconnect", () => {
+		console.log("User disconnected");
+	});
 });
 
 server.listen(PORT, () => {
-  console.log(`-------------------------------------------`);
-  console.log(`🚀 Server started in ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'} mode`);
-  console.log(`🔌 Listening on port ${PORT}`);
-  if(!isProduction) {
-    console.log(`💻 Local IP for ESP32: Use 'ipconfig' (Win) or 'ifconfig' (Mac) to find it.`);
-  }
-  console.log(`-------------------------------------------`);
+	console.log(`-------------------------------------------`);
+	console.log(
+		`🚀 Server started in ${
+			isProduction ? "PRODUCTION" : "DEVELOPMENT"
+		} mode`
+	);
+	console.log(`🔌 Listening on port ${PORT}`);
+	if (!isProduction) {
+		console.log(
+			`💻 Local IP for ESP32: Use 'ipconfig' (Win) or 'ifconfig' (Mac) to find it.`
+		);
+	}
+	console.log(`-------------------------------------------`);
 });
