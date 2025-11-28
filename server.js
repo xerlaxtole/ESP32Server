@@ -2,6 +2,7 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const path = require("path");
+const cron = require("node-cron");
 
 const app = express();
 const server = http.createServer(app);
@@ -12,6 +13,10 @@ const PORT = process.env.PORT || 3000;
 
 // Check if we are in Production or Dev
 const isProduction = process.env.NODE_ENV === "production";
+
+// Polling configuration - Customize interval here
+const POLL_INTERVAL_SECONDS = 5;
+const CRON_EXPRESSION = `*/${POLL_INTERVAL_SECONDS} * * * * *`; // Every N seconds
 
 const io = new Server(server, {
 	cors: {
@@ -86,6 +91,12 @@ io.on("connection", (socket) => {
 	socket.on("disconnect", () => {
 		console.log("User disconnected");
 	});
+});
+
+// Setup cron job to poll ESP32 for updates
+cron.schedule(CRON_EXPRESSION, () => {
+	console.log(`[${new Date().toISOString()}] Polling ESP32 for updates...`);
+	io.emit("server_cmd", { action: "report" });
 });
 
 server.listen(PORT, () => {
