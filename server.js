@@ -32,10 +32,14 @@ const io = new Server(server, {
 const MAX_HISTORY = 24;
 let serverState = {
 	temperature: null,
+	humidity: null,
+	targetTemp: 25,
 	power: false,
 	mode: "cool",
 	fanSpeed: "auto",
+	swing: "off",
 	history: [],
+	humidityHistory: [],
 };
 
 // Track when the last history entry was added
@@ -77,6 +81,24 @@ function updateServerStateFromCommand(command) {
 			if (validFanSpeeds.includes(command.value)) {
 				serverState.fanSpeed = command.value;
 				console.log(`[State Update] Fan Speed: ${command.value}`);
+				updated = true;
+			}
+			break;
+
+		case "set_swing":
+			const validSwing = ["on", "off"];
+			if (validSwing.includes(command.value)) {
+				serverState.swing = command.value;
+				console.log(`[State Update] Swing: ${command.value}`);
+				updated = true;
+			}
+			break;
+
+		case "temp":
+			const temp = parseInt(command.value);
+			if (!isNaN(temp) && temp >= 18 && temp <= 32) {
+				serverState.targetTemp = temp;
+				console.log(`[State Update] Target Temperature: ${temp}°C`);
 				updated = true;
 			}
 			break;
@@ -143,17 +165,42 @@ io.on("connection", (socket) => {
 			// Add to history if:
 			// 1. This is the first entry (lastHistoryTimestamp is null), OR
 			// 2. Enough time has passed since the last history entry
-			if (lastHistoryTimestamp === null ||
-			    (now - lastHistoryTimestamp) >= historyIntervalMs) {
-
+			if (
+				lastHistoryTimestamp === null ||
+				now - lastHistoryTimestamp >= historyIntervalMs
+			) {
 				serverState.history.push(data.temperature);
 				lastHistoryTimestamp = now;
 
-				console.log(`[${new Date(now).toISOString()}] Temperature ${data.temperature}°C added to history (${serverState.history.length}/${MAX_HISTORY})`);
+				console.log(
+					`[${new Date(now).toISOString()}] Temperature ${
+						data.temperature
+					}°C added to history (${
+						serverState.history.length
+					}/${MAX_HISTORY})`
+				);
 
 				// Limit history size
 				if (serverState.history.length > MAX_HISTORY) {
 					serverState.history.shift();
+				}
+
+				// Add humidity to history at the same time as temperature
+				if (data.humidity !== undefined) {
+					serverState.humidityHistory.push(data.humidity);
+
+					console.log(
+						`[${new Date(now).toISOString()}] Humidity ${
+							data.humidity
+						}% added to history (${
+							serverState.humidityHistory.length
+						}/${MAX_HISTORY})`
+					);
+
+					// Limit humidity history size
+					if (serverState.humidityHistory.length > MAX_HISTORY) {
+						serverState.humidityHistory.shift();
+					}
 				}
 			}
 		}
