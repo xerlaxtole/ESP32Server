@@ -14,8 +14,9 @@ const PORT = process.env.PORT || 3000;
 // Check if we are in Production or Dev
 const isProduction = process.env.NODE_ENV === "production";
 
-// Polling configuration - Customize interval here
-const POLL_INTERVAL_SECONDS = 5;
+// Polling configuration - Customize intervals here
+const POLL_INTERVAL_SECONDS = 60; // Poll ESP32 every 60 seconds (1 minute)
+const HISTORY_INTERVAL_MINUTES = 60; // Add to history every 60 minutes (1 hour)
 const CRON_EXPRESSION = `*/${POLL_INTERVAL_SECONDS} * * * * *`; // Every N seconds
 
 const io = new Server(server, {
@@ -36,6 +37,9 @@ let serverState = {
 	fanSpeed: "auto",
 	history: [],
 };
+
+// Track when the last history entry was added
+let lastHistoryTimestamp = null;
 
 // Middleware
 app.use(express.json()); // Enable JSON body parsing for REST API
@@ -71,15 +75,29 @@ io.on("connection", (socket) => {
 	socket.on("esp32_message", (data) => {
 		console.log("Data received:", data);
 
-		// Update server state
+		// Update server state (always update current temperature)
 		serverState = { ...serverState, ...data };
 
-		// Add temperature to history if present
+		// Add temperature to history only once per hour
 		if (data.temperature !== undefined) {
-			serverState.history.push(data.temperature);
-			// Limit history size
-			if (serverState.history.length > MAX_HISTORY) {
-				serverState.history.shift();
+			const now = Date.now();
+			const historyIntervalMs = HISTORY_INTERVAL_MINUTES * 60 * 1000;
+
+			// Add to history if:
+			// 1. This is the first entry (lastHistoryTimestamp is null), OR
+			// 2. Enough time has passed since the last history entry
+			if (lastHistoryTimestamp === null ||
+			    (now - lastHistoryTimestamp) >= historyIntervalMs) {
+
+				serverState.history.push(data.temperature);
+				lastHistoryTimestamp = now;
+
+				console.log(`[${new Date(now).toISOString()}] Temperature ${data.temperature}°C added to history (${serverState.history.length}/${MAX_HISTORY})`);
+
+				// Limit history size
+				if (serverState.history.length > MAX_HISTORY) {
+					serverState.history.shift();
+				}
 			}
 		}
 

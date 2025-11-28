@@ -472,7 +472,7 @@
 		<script src="/socket.io/socket.io.js"></script>
 		<script>
 			let state = {
-				temperature: 26,
+				temperature: null,
 				power: false,
 				mode: "cool",
 				fanSpeed: "auto",
@@ -499,7 +499,9 @@
 			socket.on("web_update", (data) => {
 				// Filter out undefined AND null values to prevent state corruption
 				const cleanData = Object.fromEntries(
-					Object.entries(data).filter(([_, v]) => v !== undefined && v !== null)
+					Object.entries(data).filter(
+						([_, v]) => v !== undefined && v !== null
+					)
 				);
 				state = { ...state, ...cleanData };
 				renderUI();
@@ -534,7 +536,7 @@
 			}
 
 			function renderUI() {
-				const tempDisplay = state.temperature ?? '--';
+				const tempDisplay = state.temperature ?? "--";
 				document.getElementById("tempValue").innerText = tempDisplay;
 
 				const pBtn = document.getElementById("powerBtn");
