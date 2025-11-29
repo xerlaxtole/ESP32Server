@@ -1,18 +1,19 @@
 {
-  "name": "embedded",
-  "version": "1.0.0",
-  "description": "",
-  "license": "ISC",
-  "author": "",
-  "type": "commonjs",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js",
-    "dev": "node server.js"   
-  },
-  "dependencies": {
-    "express": "^5.1.0",
-    "socket.io": "^4.8.1"
-  }
+	"name": "embedded",
+	"version": "1.0.0",
+	"description": "",
+	"license": "ISC",
+	"author": "",
+	"type": "commonjs",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"start": "node server.js",
+		"dev": "node server.js"
+	},
+	"dependencies": {
+		"express": "^5.1.0",
+		"node-cron": "^4.2.1",
+		"socket.io": "^4.8.1"
+	}
 }
