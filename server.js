@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === "production";
 
 // Polling configuration - Customize intervals here
-const POLL_INTERVAL_SECONDS = 60; // Poll ESP32 every 60 seconds (1 minute)
+const POLL_INTERVAL_SECONDS = 30; // Poll ESP32 every 60 seconds (1 minute)
 const HISTORY_INTERVAL_MINUTES = 60; // Add to history every 60 minutes (1 hour)
 const CRON_EXPRESSION = `*/${POLL_INTERVAL_SECONDS} * * * * *`; // Every N seconds
 
