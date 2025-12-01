@@ -36,7 +36,7 @@ let serverState = {
 	targetTemp: 25,
 	power: false,
 	mode: "cool",
-	fanSpeed: "auto",
+	fanSpeed: "low",
 	swing: "off",
 	history: [],
 	humidityHistory: [],
@@ -77,7 +77,7 @@ function updateServerStateFromCommand(command) {
 			break;
 
 		case "set_fan":
-			const validFanSpeeds = ["low", "med", "high", "auto"];
+			const validFanSpeeds = ["low", "med", "high"];
 			if (validFanSpeeds.includes(command.value)) {
 				serverState.fanSpeed = command.value;
 				console.log(`[State Update] Fan Speed: ${command.value}`);

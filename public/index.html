@@ -1,962 +1,873 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Smart AC Controller</title>
 
-		<!-- Tailwind CSS -->
-		<script src="https://cdn.tailwindcss.com"></script>
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Smart AC Controller</title>
 
-		<!-- Google Fonts -->
-		<link
-			href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
-			rel="stylesheet"
-		/>
+	<!-- Tailwind CSS -->
+	<script src="https://cdn.tailwindcss.com"></script>
 
-		<!-- Chart.js -->
-		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<!-- Google Fonts -->
+	<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
 
-		<style>
-			:root {
-				--bg-color: #4f83e4;
-				--card-bg: rgba(255, 255, 255, 0.85);
-				--border-color: #000000;
-				--accent-color: #ff4d4d;
-				--success-color: #34c759;
-			}
+	<!-- Chart.js -->
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-			body {
-				font-family: "Press Start 2P", cursive;
-				background-color: var(--bg-color);
-				background-image: linear-gradient(
-						transparent 95%,
-						rgba(0, 0, 0, 0.1) 50%
-					),
-					linear-gradient(
-						90deg,
-						transparent 95%,
-						rgba(0, 0, 0, 0.1) 50%
-					);
-				background-size: 20px 20px;
-				image-rendering: pixelated;
-			}
+	<style>
+		:root {
+			--bg-color: #4f83e4;
+			--card-bg: rgba(255, 255, 255, 0.85);
+			--border-color: #000000;
+			--accent-color: #ff4d4d;
+			--success-color: #34c759;
+		}
 
-			/* --- PIXEL ART CLOUDS --- */
-			.cloud {
-				width: 120px;
-				height: 40px;
-				background: #fff;
-				position: absolute;
-				border: 4px solid #000;
-				box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.2);
-				z-index: -1;
-			}
-			.cloud::after {
-				content: "";
-				position: absolute;
-				top: -20px;
-				left: 20px;
-				width: 40px;
-				height: 20px;
-				background: #fff;
-				border: 4px solid #000;
-				border-bottom: none;
-			}
-			.c1 {
-				top: 10%;
-				left: -20%;
-				animation: float 25s linear infinite;
-			}
-			.c2 {
-				top: 30%;
-				left: -20%;
-				animation: float 35s linear infinite 5s;
-				transform: scale(0.8);
-			}
-			.c3 {
-				top: 60%;
-				left: -20%;
-				animation: float 40s linear infinite 12s;
-				transform: scale(0.6);
-			}
+		body {
+			font-family: "Press Start 2P", cursive;
+			background-color: var(--bg-color);
+			background-image: linear-gradient(transparent 95%,
+					rgba(0, 0, 0, 0.1) 50%),
+				linear-gradient(90deg,
+					transparent 95%,
+					rgba(0, 0, 0, 0.1) 50%);
+			background-size: 20px 20px;
+			image-rendering: pixelated;
+		}
 
-			@keyframes float {
-				0% {
-					left: -150px;
-				}
-				100% {
-					left: 110%;
-				}
+		/* --- PIXEL ART CLOUDS --- */
+		.cloud {
+			width: 120px;
+			height: 40px;
+			background: #fff;
+			position: absolute;
+			border: 4px solid #000;
+			box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.2);
+			z-index: -1;
+		}
+
+		.cloud::after {
+			content: "";
+			position: absolute;
+			top: -20px;
+			left: 20px;
+			width: 40px;
+			height: 20px;
+			background: #fff;
+			border: 4px solid #000;
+			border-bottom: none;
+		}
+
+		.c1 {
+			top: 10%;
+			left: -20%;
+			animation: float 25s linear infinite;
+		}
+
+		.c2 {
+			top: 30%;
+			left: -20%;
+			animation: float 35s linear infinite 5s;
+			transform: scale(0.8);
+		}
+
+		.c3 {
+			top: 60%;
+			left: -20%;
+			animation: float 40s linear infinite 12s;
+			transform: scale(0.6);
+		}
+
+		@keyframes float {
+			0% {
+				left: -150px;
 			}
 
-			/* --- SUN --- */
-			.sun {
-				position: fixed;
-				top: 40px;
-				right: 40px;
-				width: 60px;
-				height: 60px;
-				background: #ffd700;
-				border: 4px solid #000;
-				box-shadow: 8px 8px 0px #000;
-				z-index: -2;
+			100% {
+				left: 110%;
+			}
+		}
+
+		/* --- SUN --- */
+		.sun {
+			position: fixed;
+			top: 40px;
+			right: 40px;
+			width: 60px;
+			height: 60px;
+			background: #ffd700;
+			border: 4px solid #000;
+			box-shadow: 8px 8px 0px #000;
+			z-index: -2;
+		}
+
+		/* --- RETRO COMPONENTS --- */
+		.retro-card {
+			background: var(--card-bg);
+			border: 4px solid var(--border-color);
+			box-shadow: 8px 8px 0px var(--border-color);
+			transition: transform 0.1s;
+		}
+
+		.retro-btn {
+			background: #fff;
+			border: 4px solid #000;
+			box-shadow: 4px 4px 0px #000;
+			cursor: pointer;
+			transition: all 0.1s;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.retro-btn:active {
+			transform: translate(4px, 4px);
+			box-shadow: none !important;
+		}
+
+		.retro-btn.active {
+			background: #000;
+			color: #fff;
+		}
+
+		.retro-btn.active svg {
+			fill: #fff;
+		}
+
+		.retro-btn:disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+			transform: none;
+			box-shadow: 4px 4px 0px #000;
+		}
+
+		.retro-btn.loading {
+			pointer-events: none;
+			opacity: 0.7;
+		}
+
+		.retro-btn.loading::after {
+			content: "";
+			width: 12px;
+			height: 12px;
+			border: 2px solid transparent;
+			border-top-color: currentColor;
+			border-radius: 50%;
+			animation: spin 0.6s linear infinite;
+			margin-left: 6px;
+		}
+
+		@keyframes spin {
+			to {
+				transform: rotate(360deg);
+			}
+		}
+
+		.power-btn-active {
+			background-color: var(--success-color) !important;
+			color: #000 !important;
+		}
+
+		.status-dot {
+			width: 16px;
+			height: 16px;
+			background: var(--accent-color);
+			border: 3px solid #000;
+			box-shadow: 2px 2px 0px #000;
+		}
+
+		.status-dot.connected {
+			background: var(--success-color);
+		}
+
+		/* Chart Canvas Fix */
+		canvas {
+			image-rendering: pixelated;
+		}
+
+		/* --- TOAST NOTIFICATIONS --- */
+		.toast-container {
+			position: fixed;
+			bottom: 20px;
+			left: 50%;
+			transform: translateX(-50%);
+			z-index: 1000;
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+			pointer-events: none;
+		}
+
+		.toast {
+			font-family: "Press Start 2P", cursive;
+			font-size: 0.5rem;
+			padding: 12px 16px;
+			border: 4px solid #000;
+			box-shadow: 4px 4px 0px #000;
+			animation: slideUp 0.3s ease-out;
+			pointer-events: auto;
+		}
+
+		.toast.success {
+			background: var(--success-color);
+			color: #000;
+		}
+
+		.toast.error {
+			background: var(--accent-color);
+			color: #fff;
+		}
+
+		.toast.info {
+			background: #fff;
+			color: #000;
+		}
+
+		.toast.hiding {
+			animation: slideDown 0.3s ease-in forwards;
+		}
+
+		@keyframes slideUp {
+			from {
+				opacity: 0;
+				transform: translateY(20px);
 			}
 
-			/* --- RETRO COMPONENTS --- */
-			.retro-card {
-				background: var(--card-bg);
-				border: 4px solid var(--border-color);
-				box-shadow: 8px 8px 0px var(--border-color);
-				transition: transform 0.1s;
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+
+		@keyframes slideDown {
+			from {
+				opacity: 1;
+				transform: translateY(0);
 			}
 
-			.retro-btn {
-				background: #fff;
-				border: 4px solid #000;
-				box-shadow: 4px 4px 0px #000;
-				cursor: pointer;
-				transition: all 0.1s;
-				display: flex;
-				align-items: center;
-				justify-content: center;
+			to {
+				opacity: 0;
+				transform: translateY(20px);
 			}
-			.retro-btn:active {
-				transform: translate(4px, 4px);
-				box-shadow: none !important;
-			}
-			.retro-btn.active {
-				background: #000;
-				color: #fff;
-			}
-			.retro-btn.active svg {
-				fill: #fff;
-			}
-			.retro-btn:disabled {
-				opacity: 0.5;
-				cursor: not-allowed;
-				transform: none;
-				box-shadow: 4px 4px 0px #000;
-			}
-			.retro-btn.loading {
-				pointer-events: none;
-				opacity: 0.7;
-			}
-			.retro-btn.loading::after {
-				content: "";
-				width: 12px;
-				height: 12px;
-				border: 2px solid transparent;
-				border-top-color: currentColor;
-				border-radius: 50%;
-				animation: spin 0.6s linear infinite;
-				margin-left: 6px;
-			}
+		}
+	</style>
+</head>
 
-			@keyframes spin {
-				to { transform: rotate(360deg); }
-			}
+<body class="min-h-screen p-2 md:p-6 flex flex-col items-center justify-center">
+	<!-- Toast Container -->
+	<div id="toastContainer" class="toast-container"></div>
 
-			.power-btn-active {
-				background-color: var(--success-color) !important;
-				color: #000 !important;
-			}
+	<!-- Background Elements -->
+	<div class="sun hidden md:block"></div>
+	<div class="fixed inset-0 pointer-events-none overflow-hidden">
+		<div class="cloud c1"></div>
+		<div class="cloud c2"></div>
+		<div class="cloud c3"></div>
+	</div>
 
-			.status-dot {
-				width: 16px;
-				height: 16px;
-				background: var(--accent-color);
-				border: 3px solid #000;
-				box-shadow: 2px 2px 0px #000;
-			}
-			.status-dot.connected {
-				background: var(--success-color);
-			}
-
-			/* Chart Canvas Fix */
-			canvas {
-				image-rendering: pixelated;
-			}
-
-			/* --- TOAST NOTIFICATIONS --- */
-			.toast-container {
-				position: fixed;
-				bottom: 20px;
-				left: 50%;
-				transform: translateX(-50%);
-				z-index: 1000;
-				display: flex;
-				flex-direction: column;
-				gap: 8px;
-				pointer-events: none;
-			}
-			.toast {
-				font-family: "Press Start 2P", cursive;
-				font-size: 0.5rem;
-				padding: 12px 16px;
-				border: 4px solid #000;
-				box-shadow: 4px 4px 0px #000;
-				animation: slideUp 0.3s ease-out;
-				pointer-events: auto;
-			}
-			.toast.success {
-				background: var(--success-color);
-				color: #000;
-			}
-			.toast.error {
-				background: var(--accent-color);
-				color: #fff;
-			}
-			.toast.info {
-				background: #fff;
-				color: #000;
-			}
-			.toast.hiding {
-				animation: slideDown 0.3s ease-in forwards;
-			}
-
-			@keyframes slideUp {
-				from {
-					opacity: 0;
-					transform: translateY(20px);
-				}
-				to {
-					opacity: 1;
-					transform: translateY(0);
-				}
-			}
-			@keyframes slideDown {
-				from {
-					opacity: 1;
-					transform: translateY(0);
-				}
-				to {
-					opacity: 0;
-					transform: translateY(20px);
-				}
-			}
-		</style>
-	</head>
-	<body
-		class="min-h-screen p-2 md:p-6 flex flex-col items-center justify-center"
-	>
-		<!-- Toast Container -->
-		<div id="toastContainer" class="toast-container"></div>
-
-		<!-- Background Elements -->
-		<div class="sun hidden md:block"></div>
-		<div class="fixed inset-0 pointer-events-none overflow-hidden">
-			<div class="cloud c1"></div>
-			<div class="cloud c2"></div>
-			<div class="cloud c3"></div>
+	<!-- Dashboard Container -->
+	<div class="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 gap-4 relative z-10">
+		<!-- HEADER -->
+		<div class="lg:col-span-12 retro-card p-3 flex justify-between items-center bg-white">
+			<div>
+				<h1 class="text-[0.6rem] md:text-xs uppercase mb-1 text-gray-500">
+					Device
+				</h1>
+				<h2 id="deviceName" class="text-xs md:text-lg font-bold uppercase leading-tight">
+					Loading...
+				</h2>
+			</div>
+			<div class="flex items-center gap-2">
+				<span class="text-[0.5rem] uppercase hidden sm:inline" id="statusText">Offline</span>
+				<div id="connDot" class="status-dot"></div>
+			</div>
 		</div>
 
-		<!-- Dashboard Container -->
-		<div
-			class="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 gap-4 relative z-10"
-		>
-			<!-- HEADER -->
-			<div
-				class="lg:col-span-12 retro-card p-3 flex justify-between items-center bg-white"
-			>
-				<div>
-					<h1
-						class="text-[0.6rem] md:text-xs uppercase mb-1 text-gray-500"
-					>
-						Device
-					</h1>
-					<h2
-						id="deviceName"
-						class="text-xs md:text-lg font-bold uppercase leading-tight"
-					>
-						Loading...
-					</h2>
-				</div>
-				<div class="flex items-center gap-2">
-					<span
-						class="text-[0.5rem] uppercase hidden sm:inline"
-						id="statusText"
-						>Offline</span
-					>
-					<div id="connDot" class="status-dot"></div>
-				</div>
-			</div>
-
-			<!-- LEFT COLUMN: MAIN CONTROLS -->
-			<div class="lg:col-span-5 flex flex-col gap-4">
-				<!-- Temperature Display Card -->
+		<!-- LEFT COLUMN: MAIN CONTROLS -->
+		<div class="lg:col-span-5 flex flex-col gap-4">
+			<!-- Temperature Display Card -->
+			<div class="retro-card p-4 flex flex-col items-center justify-center text-center h-full">
 				<div
-					class="retro-card p-4 flex flex-col items-center justify-center text-center h-full"
-				>
-					<div
-						class="relative w-36 h-36 md:w-44 md:h-44 bg-gray-100 border-4 border-black shadow-inner flex flex-col items-center justify-center mb-4"
-					>
-						<div
-							class="absolute inset-0 shadow-[inset_4px_4px_0px_rgba(0,0,0,0.1)] pointer-events-none"
-						></div>
+					class="relative w-36 h-36 md:w-44 md:h-44 bg-gray-100 border-4 border-black shadow-inner flex flex-col items-center justify-center mb-4">
+					<div class="absolute inset-0 shadow-[inset_4px_4px_0px_rgba(0,0,0,0.1)] pointer-events-none"></div>
 
-						<span class="text-[0.6rem] text-gray-500 mb-2"
-							>CURRENT</span
-						>
-						<div class="flex items-baseline">
-							<span
-								id="tempValue"
-								class="text-3xl md:text-4xl font-bold"
-								>--</span
-							>
-							<span class="text-lg md:text-xl ml-1">°C</span>
-						</div>
-
-						<div class="mt-2 flex items-center gap-2 text-[0.6rem]">
-							<span>HUM:</span>
-							<span id="humidityValue" class="font-bold">--</span
-							>%
-						</div>
+					<span class="text-[0.6rem] text-gray-500 mb-2">CURRENT</span>
+					<div class="flex items-baseline">
+						<span id="tempValue" class="text-3xl md:text-4xl font-bold">--</span>
+						<span class="text-lg md:text-xl ml-1">°C</span>
 					</div>
 
-					<!-- Temp Controls -->
-					<div class="flex items-center gap-3 w-full justify-center">
-						<button
-							id="tempDownBtn"
-							class="retro-btn w-10 h-10 text-lg font-bold bg-white hover:bg-gray-50"
-						>
-							-
-						</button>
+					<div class="mt-2 flex items-center gap-2 text-[0.6rem]">
+						<span>HUM:</span>
+						<span id="humidityValue" class="font-bold">--</span>%
+					</div>
+				</div>
 
-						<div class="flex flex-col items-center w-20">
-							<span class="text-[0.5rem] text-gray-500 mb-1"
-								>TARGET</span
-							>
-							<span class="text-xl font-bold"
-								><span id="targetTemp">--</span>°C</span
-							>
-						</div>
+				<!-- Temp Controls -->
+				<div class="flex items-center gap-3 w-full justify-center">
+					<button id="tempDownBtn" class="retro-btn w-10 h-10 text-lg font-bold bg-white hover:bg-gray-50">
+						-
+					</button>
 
-						<button
-							id="tempUpBtn"
-							class="retro-btn w-10 h-10 text-lg font-bold bg-white hover:bg-gray-50"
-						>
-							+
-						</button>
+					<div class="flex flex-col items-center w-20">
+						<span class="text-[0.5rem] text-gray-500 mb-1">TARGET</span>
+						<span class="text-xl font-bold"><span id="targetTemp">--</span>°C</span>
 					</div>
 
-					<!-- Power Button -->
-					<button
-						id="powerBtn"
-						class="retro-btn w-full mt-5 py-3 text-red-500 hover:bg-red-50 gap-2 font-bold text-sm"
-					>
+					<button id="tempUpBtn" class="retro-btn w-10 h-10 text-lg font-bold bg-white hover:bg-gray-50">
+						+
+					</button>
+				</div>
+
+				<!-- Power Button -->
+				<button id="powerBtn"
+					class="retro-btn w-full mt-5 py-3 text-red-500 hover:bg-red-50 gap-2 font-bold text-sm">
+					<svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+						<path
+							d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42C17.99 7.86 19 9.81 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.19 1.01-4.14 2.58-5.42L6.17 5.17C4.23 6.82 3 9.26 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9c0-2.74-1.23-5.18-3.17-6.83z" />
+					</svg>
+					<span>POWER <span id="powerText">OFF</span></span>
+				</button>
+			</div>
+		</div>
+
+		<!-- RIGHT COLUMN: MODES & STATS -->
+		<div class="lg:col-span-7 flex flex-col gap-4">
+			<!-- Mode, Fan & Swing -->
+			<div class="retro-card p-4">
+				<h3 class="text-[0.6rem] uppercase underline decoration-2 mb-3">
+					Operation Mode
+				</h3>
+				<div class="grid grid-cols-3 gap-3 mb-5">
+					<button data-mode="cool" id="mode-cool" class="retro-btn py-2 px-2 flex-col gap-1 mode-btn">
 						<svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
 							<path
-								d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42C17.99 7.86 19 9.81 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.19 1.01-4.14 2.58-5.42L6.17 5.17C4.23 6.82 3 9.26 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9c0-2.74-1.23-5.18-3.17-6.83z"
-							/>
+								d="M14 6V4h-4v2h4zM4 8v11h16V8H4zm16-2c1.11 0 2 .89 2 2v11c0 1.11-.89 2-2 2H4c-1.11 0-2-.89-2-2V8c0-1.11.89-2 2-2h16z" />
 						</svg>
-						<span>POWER <span id="powerText">OFF</span></span>
+						<span class="text-[0.5rem]">COOL</span>
+					</button>
+					<button data-mode="dry" id="mode-dry" class="retro-btn py-2 px-2 flex-col gap-1 mode-btn">
+						<svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+							<path
+								d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8zm0 18c-3.35 0-6-2.57-6-6.2 0-2.34 1.95-5.44 6-9.14 4.05 3.7 6 6.8 6 9.14 0 3.63-2.65 6.2-6 6.2z" />
+						</svg>
+						<span class="text-[0.5rem]">DRY</span>
+					</button>
+					<button data-mode="fan" id="mode-fan" class="retro-btn py-2 px-2 flex-col gap-1 mode-btn">
+						<svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+							<path
+								d="M12 11c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1m0-9c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2m0 18c4.41 0 8-3.59 8-8s-3.59-8-8-8-8 3.59-8 8 3.59 8 8 8z" />
+						</svg>
+						<span class="text-[0.5rem]">FAN</span>
+					</button>
+				</div>
+
+				<h3 class="text-[0.6rem] uppercase underline decoration-2 mb-3">
+					Fan Speed
+				</h3>
+				<div class="flex border-4 border-black shadow-[4px_4px_0px_#000] bg-white mb-5">
+					<button data-fan="low" id="fan-low"
+						class="flex-1 py-2 text-[0.5rem] border-r-4 border-black hover:bg-gray-100 fan-btn">
+						LOW
+					</button>
+					<button data-fan="med" id="fan-med"
+						class="flex-1 py-2 text-[0.5rem] border-r-4 border-black hover:bg-gray-100 fan-btn">
+						MED
+					</button>
+					<button data-fan="high" id="fan-high"
+						class="flex-1 py-2 text-[0.5rem] border-r-4 border-black hover:bg-gray-100 fan-btn">
+						HI
+					</button>
+
+				</div>
+
+				<!-- SWING CONTROL -->
+				<h3 class="text-[0.6rem] uppercase underline decoration-2 mb-3">
+					Swing
+				</h3>
+				<div class="flex border-4 border-black shadow-[4px_4px_0px_#000] bg-white">
+					<button data-swing="on" id="swing-on"
+						class="flex-1 py-2 text-[0.5rem] border-r-4 border-black hover:bg-gray-100 swing-btn">
+						ON
+					</button>
+					<button data-swing="off" id="swing-off"
+						class="flex-1 py-2 text-[0.5rem] bg-black text-white hover:bg-gray-800 swing-btn">
+						OFF
 					</button>
 				</div>
 			</div>
 
-			<!-- RIGHT COLUMN: MODES & STATS -->
-			<div class="lg:col-span-7 flex flex-col gap-4">
-				<!-- Mode, Fan & Swing -->
-				<div class="retro-card p-4">
-					<h3
-						class="text-[0.6rem] uppercase underline decoration-2 mb-3"
-					>
-						Operation Mode
-					</h3>
-					<div class="grid grid-cols-3 gap-3 mb-5">
-						<button
-							data-mode="cool"
-							id="mode-cool"
-							class="retro-btn py-2 px-2 flex-col gap-1 mode-btn"
-						>
-							<svg
-								class="w-5 h-5 fill-current"
-								viewBox="0 0 24 24"
-							>
-								<path
-									d="M14 6V4h-4v2h4zM4 8v11h16V8H4zm16-2c1.11 0 2 .89 2 2v11c0 1.11-.89 2-2 2H4c-1.11 0-2-.89-2-2V8c0-1.11.89-2 2-2h16z"
-								/>
-							</svg>
-							<span class="text-[0.5rem]">COOL</span>
-						</button>
-						<button
-							data-mode="dry"
-							id="mode-dry"
-							class="retro-btn py-2 px-2 flex-col gap-1 mode-btn"
-						>
-							<svg
-								class="w-5 h-5 fill-current"
-								viewBox="0 0 24 24"
-							>
-								<path
-									d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8zm0 18c-3.35 0-6-2.57-6-6.2 0-2.34 1.95-5.44 6-9.14 4.05 3.7 6 6.8 6 9.14 0 3.63-2.65 6.2-6 6.2z"
-								/>
-							</svg>
-							<span class="text-[0.5rem]">DRY</span>
-						</button>
-						<button
-							data-mode="fan"
-							id="mode-fan"
-							class="retro-btn py-2 px-2 flex-col gap-1 mode-btn"
-						>
-							<svg
-								class="w-5 h-5 fill-current"
-								viewBox="0 0 24 24"
-							>
-								<path
-									d="M12 11c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1m0-9c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2m0 18c4.41 0 8-3.59 8-8s-3.59-8-8-8-8 3.59-8 8 3.59 8 8 8z"
-								/>
-							</svg>
-							<span class="text-[0.5rem]">FAN</span>
-						</button>
-					</div>
-
-					<h3
-						class="text-[0.6rem] uppercase underline decoration-2 mb-3"
-					>
-						Fan Speed
-					</h3>
-					<div
-						class="flex border-4 border-black shadow-[4px_4px_0px_#000] bg-white mb-5"
-					>
-						<button
-							data-fan="low"
-							id="fan-low"
-							class="flex-1 py-2 text-[0.5rem] border-r-4 border-black hover:bg-gray-100 fan-btn"
-						>
-							LOW
-						</button>
-						<button
-							data-fan="med"
-							id="fan-med"
-							class="flex-1 py-2 text-[0.5rem] border-r-4 border-black hover:bg-gray-100 fan-btn"
-						>
-							MED
-						</button>
-						<button
-							data-fan="high"
-							id="fan-high"
-							class="flex-1 py-2 text-[0.5rem] border-r-4 border-black hover:bg-gray-100 fan-btn"
-						>
-							HI
-						</button>
-						<button
-							data-fan="auto"
-							id="fan-auto"
-							class="flex-1 py-2 text-[0.5rem] bg-black text-white hover:bg-gray-800 fan-btn"
-						>
-							AUTO
-						</button>
-					</div>
-
-					<!-- SWING CONTROL -->
-					<h3
-						class="text-[0.6rem] uppercase underline decoration-2 mb-3"
-					>
-						Swing
-					</h3>
-					<div
-						class="flex border-4 border-black shadow-[4px_4px_0px_#000] bg-white"
-					>
-						<button
-							data-swing="on"
-							id="swing-on"
-							class="flex-1 py-2 text-[0.5rem] border-r-4 border-black hover:bg-gray-100 swing-btn"
-						>
-							ON
-						</button>
-						<button
-							data-swing="off"
-							id="swing-off"
-							class="flex-1 py-2 text-[0.5rem] bg-black text-white hover:bg-gray-800 swing-btn"
-						>
-							OFF
-						</button>
-					</div>
+			<!-- Tabbed Charts -->
+			<div class="retro-card p-0 flex-1 flex flex-col min-h-[350px] overflow-hidden">
+				<!-- Tabs Header -->
+				<div class="flex border-b-4 border-black">
+					<button id="tab-temp"
+						class="flex-1 py-3 text-[0.6rem] font-bold bg-black text-white hover:opacity-90 tab-btn"
+						data-tab="temp">
+						TEMP
+					</button>
+					<button id="tab-hum"
+						class="flex-1 py-3 text-[0.6rem] font-bold bg-white text-black border-l-4 border-black hover:bg-gray-100 tab-btn"
+						data-tab="humidity">
+						HUMIDITY
+					</button>
 				</div>
 
-				<!-- Tabbed Charts -->
-				<div
-					class="retro-card p-0 flex-1 flex flex-col min-h-[350px] overflow-hidden"
-				>
-					<!-- Tabs Header -->
-					<div class="flex border-b-4 border-black">
-						<button
-							id="tab-temp"
-							class="flex-1 py-3 text-[0.6rem] font-bold bg-black text-white hover:opacity-90 tab-btn"
-							data-tab="temp"
-						>
-							TEMP
-						</button>
-						<button
-							id="tab-hum"
-							class="flex-1 py-3 text-[0.6rem] font-bold bg-white text-black border-l-4 border-black hover:bg-gray-100 tab-btn"
-							data-tab="humidity"
-						>
-							HUMIDITY
-						</button>
-					</div>
-
-					<!-- Tab Content -->
-					<div class="relative flex-1 w-full bg-white">
-						<div
-							id="view-temp"
-							class="absolute inset-0 p-2 w-full h-full"
-						>
-							<div class="w-full h-full relative">
-								<canvas id="tempChart"></canvas>
-							</div>
+				<!-- Tab Content -->
+				<div class="relative flex-1 w-full bg-white">
+					<div id="view-temp" class="absolute inset-0 p-2 w-full h-full">
+						<div class="w-full h-full relative">
+							<canvas id="tempChart"></canvas>
 						</div>
-						<div
-							id="view-hum"
-							class="absolute inset-0 p-2 w-full h-full hidden"
-						>
-							<div class="w-full h-full relative">
-								<canvas id="humidityChart"></canvas>
-							</div>
+					</div>
+					<div id="view-hum" class="absolute inset-0 p-2 w-full h-full hidden">
+						<div class="w-full h-full relative">
+							<canvas id="humidityChart"></canvas>
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
+	</div>
 
-		<!-- Socket.IO -->
-		<script src="/socket.io/socket.io.js"></script>
+	<!-- Socket.IO -->
+	<script src="/socket.io/socket.io.js"></script>
 
-		<!-- App Scripts -->
-		<script>
-			// --- CONFIG & STATE ---
-			const CONFIG = {
-				deviceName: "Master Bedroom", // Configurable device name
-				tempMin: 18,
-				tempMax: 32,
-				commandTimeout: 5000, // 5 second timeout for commands
-			};
+	<!-- App Scripts -->
+	<script>
+		// --- CONFIG & STATE ---
+		const CONFIG = {
+			deviceName: "Master Bedroom", // Configurable device name
+			tempMin: 18,
+			tempMax: 32,
+			commandTimeout: 5000, // 5 second timeout for commands
+		};
 
-			let state = {
-				temperature: null,
-				humidity: null,
-				targetTemp: 25,
-				power: false,
-				mode: "cool",
-				fanSpeed: "auto",
-				swing: "off",
-				history: [],
-				humidityHistory: [],
-				historyTimestamps: [],
-			};
+		let state = {
+			temperature: null,
+			humidity: null,
+			targetTemp: 25,
+			power: false,
+			mode: "cool",
+			fanSpeed: "low",
+			swing: "off",
+			history: [],
+			humidityHistory: [],
+			historyTimestamps: [],
+		};
 
-			let tempChart, humidityChart;
-			let socket;
-			let pendingCommands = new Map(); // Track pending commands for loading states
+		let tempChart, humidityChart;
+		let socket;
+		let pendingCommands = new Map(); // Track pending commands for loading states
 
-			// --- TOAST SYSTEM ---
-			function showToast(message, type = "info", duration = 3000) {
-				const container = document.getElementById("toastContainer");
-				const toast = document.createElement("div");
-				toast.className = `toast ${type}`;
-				toast.textContent = message;
-				container.appendChild(toast);
+		// --- TOAST SYSTEM ---
+		function showToast(message, type = "info", duration = 3000) {
+			const container = document.getElementById("toastContainer");
+			const toast = document.createElement("div");
+			toast.className = `toast ${type}`;
+			toast.textContent = message;
+			container.appendChild(toast);
 
-				setTimeout(() => {
-					toast.classList.add("hiding");
-					setTimeout(() => toast.remove(), 300);
-				}, duration);
+			setTimeout(() => {
+				toast.classList.add("hiding");
+				setTimeout(() => toast.remove(), 300);
+			}, duration);
+		}
+
+		// --- CHART SETUP ---
+		function formatTimeLabel(intervalsAgo) {
+			const intervalMs = 5 * 1000; // 5 seconds
+			const date = new Date(Date.now() - intervalsAgo * intervalMs);
+			return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+		}
+
+		function generateTimeLabels(count) {
+			const labels = [];
+			for (let i = count - 1; i >= 0; i--) {
+				labels.push(formatTimeLabel(i));
 			}
+			return labels;
+		}
 
-			// --- CHART SETUP ---
-			function formatTimeLabel(intervalsAgo) {
-				const intervalMs = 5 * 1000; // 5 seconds
-				const date = new Date(Date.now() - intervalsAgo * intervalMs);
-				return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-			}
-
-			function generateTimeLabels(count) {
-				const labels = [];
-				for (let i = count - 1; i >= 0; i--) {
-					labels.push(formatTimeLabel(i));
-				}
-				return labels;
-			}
-
-			const commonOptions = {
-				responsive: true,
-				maintainAspectRatio: false,
-				animation: false,
-				elements: { point: { radius: 2, hoverRadius: 4 } },
-				plugins: { legend: { display: false } },
-				scales: {
-					x: {
-						display: true,
-						ticks: {
-							font: { family: "'Press Start 2P'", size: 6 },
-							color: "#666",
-							maxRotation: 45,
-							minRotation: 45,
-							maxTicksLimit: 6,
-						},
-						grid: { display: false },
+		const commonOptions = {
+			responsive: true,
+			maintainAspectRatio: false,
+			animation: false,
+			elements: { point: { radius: 2, hoverRadius: 4 } },
+			plugins: { legend: { display: false } },
+			scales: {
+				x: {
+					display: true,
+					ticks: {
+						font: { family: "'Press Start 2P'", size: 6 },
+						color: "#666",
+						maxRotation: 45,
+						minRotation: 45,
+						maxTicksLimit: 6,
 					},
-					y: {
+					grid: { display: false },
+				},
+				y: {
+					display: true,
+					position: "right",
+					ticks: {
+						font: { family: "'Press Start 2P'", size: 8 },
+						color: "#000",
+						stepSize: 1,
+					},
+					grid: {
 						display: true,
-						position: "right",
-						ticks: {
-							font: { family: "'Press Start 2P'", size: 8 },
-							color: "#000",
-							stepSize: 1,
-						},
-						grid: {
-							display: true,
-							drawBorder: false,
-							color: "#e5e5e5",
-						},
+						drawBorder: false,
+						color: "#e5e5e5",
 					},
 				},
-			};
+			},
+		};
 
-			function initCharts() {
-				const ctxT = document.getElementById("tempChart").getContext("2d");
-				tempChart = new Chart(ctxT, {
-					type: "line",
-					data: {
-						labels: [],
-						datasets: [
-							{
-								data: [],
-								borderColor: "#000",
-								borderWidth: 3,
-								backgroundColor: "rgba(0,0,0,0.05)",
-								fill: true,
-								tension: 0.1,
-							},
-						],
-					},
-					options: {
-						...commonOptions,
-						scales: {
-							...commonOptions.scales,
-							y: { ...commonOptions.scales.y, min: 16, max: 32 },
+		function initCharts() {
+			const ctxT = document.getElementById("tempChart").getContext("2d");
+			tempChart = new Chart(ctxT, {
+				type: "line",
+				data: {
+					labels: [],
+					datasets: [
+						{
+							data: [],
+							borderColor: "#000",
+							borderWidth: 3,
+							backgroundColor: "rgba(0,0,0,0.05)",
+							fill: true,
+							tension: 0.1,
 						},
+					],
+				},
+				options: {
+					...commonOptions,
+					scales: {
+						...commonOptions.scales,
+						y: { ...commonOptions.scales.y, min: 16, max: 32 },
 					},
-				});
-
-				const ctxH = document.getElementById("humidityChart").getContext("2d");
-				humidityChart = new Chart(ctxH, {
-					type: "line",
-					data: {
-						labels: [],
-						datasets: [
-							{
-								data: [],
-								borderColor: "#4f83e4",
-								borderWidth: 3,
-								backgroundColor: "rgba(79, 131, 228, 0.1)",
-								fill: true,
-								tension: 0.1,
-							},
-						],
-					},
-					options: {
-						...commonOptions,
-						scales: {
-							...commonOptions.scales,
-							y: { ...commonOptions.scales.y, min: 30, max: 90 },
-						},
-					},
-				});
-			}
-
-			// --- TAB SWITCHING ---
-			function switchTab(tab) {
-				const btnTemp = document.getElementById("tab-temp");
-				const btnHum = document.getElementById("tab-hum");
-				const viewTemp = document.getElementById("view-temp");
-				const viewHum = document.getElementById("view-hum");
-
-				if (tab === "temp") {
-					btnTemp.classList.add("bg-black", "text-white");
-					btnTemp.classList.remove("bg-white", "text-black", "hover:bg-gray-100");
-					btnHum.classList.remove("bg-black", "text-white");
-					btnHum.classList.add("bg-white", "text-black", "hover:bg-gray-100");
-					viewTemp.classList.remove("hidden");
-					viewHum.classList.add("hidden");
-				} else {
-					btnTemp.classList.remove("bg-black", "text-white");
-					btnTemp.classList.add("bg-white", "text-black", "hover:bg-gray-100");
-					btnHum.classList.add("bg-black", "text-white");
-					btnHum.classList.remove("bg-white", "text-black", "hover:bg-gray-100");
-					viewTemp.classList.add("hidden");
-					viewHum.classList.remove("hidden");
-				}
-			}
-
-			// --- LOADING STATE MANAGEMENT ---
-			function setButtonLoading(buttonId, loading) {
-				const btn = document.getElementById(buttonId);
-				if (!btn) return;
-
-				if (loading) {
-					btn.classList.add("loading");
-					btn.disabled = true;
-				} else {
-					btn.classList.remove("loading");
-					btn.disabled = false;
-				}
-			}
-
-			// --- NETWORK & UI ---
-			document.addEventListener("DOMContentLoaded", function () {
-				initCharts();
-
-				// Set device name from config
-				document.getElementById("deviceName").textContent = CONFIG.deviceName;
-
-				// Setup event listeners (delegated)
-				setupEventListeners();
-
-				// Connect to server
-				if (typeof io !== "undefined") {
-					socket = io();
-
-					socket.on("connect", () => {
-						document.getElementById("statusText").innerText = "Online";
-						document.getElementById("connDot").classList.add("connected");
-						socket.emit("request_state");
-						showToast("Connected to server", "success");
-					});
-
-					socket.on("disconnect", () => {
-						document.getElementById("statusText").innerText = "Offline";
-						document.getElementById("connDot").classList.remove("connected");
-						showToast("Disconnected from server", "error");
-					});
-
-					socket.on("web_update", (data) => {
-						// Clear any pending command states since we got server confirmation
-						pendingCommands.clear();
-						document.querySelectorAll(".loading").forEach((el) => {
-							el.classList.remove("loading");
-							el.disabled = false;
-						});
-
-						// Filter out undefined values to protect state
-						const cleanData = Object.fromEntries(
-							Object.entries(data).filter(
-								([_, v]) => v !== undefined && v !== null
-							)
-						);
-						state = { ...state, ...cleanData };
-						renderUI();
-					});
-				} else {
-					console.error("Socket.IO not loaded. Is the server running?");
-					showToast("Failed to load Socket.IO", "error");
-				}
+				},
 			});
 
-			// --- EVENT LISTENERS SETUP ---
-			function setupEventListeners() {
-				// Power button
-				document.getElementById("powerBtn").addEventListener("click", togglePower);
+			const ctxH = document.getElementById("humidityChart").getContext("2d");
+			humidityChart = new Chart(ctxH, {
+				type: "line",
+				data: {
+					labels: [],
+					datasets: [
+						{
+							data: [],
+							borderColor: "#4f83e4",
+							borderWidth: 3,
+							backgroundColor: "rgba(79, 131, 228, 0.1)",
+							fill: true,
+							tension: 0.1,
+						},
+					],
+				},
+				options: {
+					...commonOptions,
+					scales: {
+						...commonOptions.scales,
+						y: { ...commonOptions.scales.y, min: 30, max: 90 },
+					},
+				},
+			});
+		}
 
-				// Temperature buttons
-				document.getElementById("tempUpBtn").addEventListener("click", () => updateTemp(1));
-				document.getElementById("tempDownBtn").addEventListener("click", () => updateTemp(-1));
+		// --- TAB SWITCHING ---
+		function switchTab(tab) {
+			const btnTemp = document.getElementById("tab-temp");
+			const btnHum = document.getElementById("tab-hum");
+			const viewTemp = document.getElementById("view-temp");
+			const viewHum = document.getElementById("view-hum");
 
-				// Mode buttons
-				document.querySelectorAll(".mode-btn").forEach((btn) => {
-					btn.addEventListener("click", () => setMode(btn.dataset.mode));
-				});
-
-				// Fan buttons
-				document.querySelectorAll(".fan-btn").forEach((btn) => {
-					btn.addEventListener("click", () => setFan(btn.dataset.fan));
-				});
-
-				// Swing buttons
-				document.querySelectorAll(".swing-btn").forEach((btn) => {
-					btn.addEventListener("click", () => setSwing(btn.dataset.swing));
-				});
-
-				// Tab buttons
-				document.querySelectorAll(".tab-btn").forEach((btn) => {
-					btn.addEventListener("click", () => switchTab(btn.dataset.tab));
-				});
+			if (tab === "temp") {
+				btnTemp.classList.add("bg-black", "text-white");
+				btnTemp.classList.remove("bg-white", "text-black", "hover:bg-gray-100");
+				btnHum.classList.remove("bg-black", "text-white");
+				btnHum.classList.add("bg-white", "text-black", "hover:bg-gray-100");
+				viewTemp.classList.remove("hidden");
+				viewHum.classList.add("hidden");
+			} else {
+				btnTemp.classList.remove("bg-black", "text-white");
+				btnTemp.classList.add("bg-white", "text-black", "hover:bg-gray-100");
+				btnHum.classList.add("bg-black", "text-white");
+				btnHum.classList.remove("bg-white", "text-black", "hover:bg-gray-100");
+				viewTemp.classList.add("hidden");
+				viewHum.classList.remove("hidden");
 			}
+		}
 
-			// Send Command via REST API with error handling
-			async function sendCommand(data, buttonId = null) {
-				const commandId = Date.now().toString();
+		// --- LOADING STATE MANAGEMENT ---
+		function setButtonLoading(buttonId, loading) {
+			const btn = document.getElementById(buttonId);
+			if (!btn) return;
 
-				if (buttonId) {
-					setButtonLoading(buttonId, true);
-					pendingCommands.set(commandId, buttonId);
-				}
+			if (loading) {
+				btn.classList.add("loading");
+				btn.disabled = true;
+			} else {
+				btn.classList.remove("loading");
+				btn.disabled = false;
+			}
+		}
 
-				// Set timeout to clear loading state if server doesn't respond
-				const timeoutId = setTimeout(() => {
-					if (pendingCommands.has(commandId)) {
-						pendingCommands.delete(commandId);
-						if (buttonId) {
-							setButtonLoading(buttonId, false);
-						}
-						showToast("Command timed out", "error");
-					}
-				}, CONFIG.commandTimeout);
+		// --- NETWORK & UI ---
+		document.addEventListener("DOMContentLoaded", function () {
+			initCharts();
 
-				try {
-					const response = await fetch("/api/command", {
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify(data),
+			// Set device name from config
+			document.getElementById("deviceName").textContent = CONFIG.deviceName;
+
+			// Setup event listeners (delegated)
+			setupEventListeners();
+
+			// Connect to server
+			if (typeof io !== "undefined") {
+				socket = io();
+
+				socket.on("connect", () => {
+					document.getElementById("statusText").innerText = "Online";
+					document.getElementById("connDot").classList.add("connected");
+					socket.emit("request_state");
+					showToast("Connected to server", "success");
+				});
+
+				socket.on("disconnect", () => {
+					document.getElementById("statusText").innerText = "Offline";
+					document.getElementById("connDot").classList.remove("connected");
+					showToast("Disconnected from server", "error");
+				});
+
+				socket.on("web_update", (data) => {
+					// Clear any pending command states since we got server confirmation
+					pendingCommands.clear();
+					document.querySelectorAll(".loading").forEach((el) => {
+						el.classList.remove("loading");
+						el.disabled = false;
 					});
 
-					if (!response.ok) {
-						throw new Error(`HTTP ${response.status}`);
-					}
+					// Filter out undefined values to protect state
+					const cleanData = Object.fromEntries(
+						Object.entries(data).filter(
+							([_, v]) => v !== undefined && v !== null
+						)
+					);
+					state = { ...state, ...cleanData };
+					renderUI();
+				});
+			} else {
+				console.error("Socket.IO not loaded. Is the server running?");
+				showToast("Failed to load Socket.IO", "error");
+			}
+		});
 
-					clearTimeout(timeoutId);
-				} catch (e) {
-					console.error("Error sending command:", e);
-					clearTimeout(timeoutId);
+		// --- EVENT LISTENERS SETUP ---
+		function setupEventListeners() {
+			// Power button
+			document.getElementById("powerBtn").addEventListener("click", togglePower);
+
+			// Temperature buttons
+			document.getElementById("tempUpBtn").addEventListener("click", () => updateTemp(1));
+			document.getElementById("tempDownBtn").addEventListener("click", () => updateTemp(-1));
+
+			// Mode buttons
+			document.querySelectorAll(".mode-btn").forEach((btn) => {
+				btn.addEventListener("click", () => setMode(btn.dataset.mode));
+			});
+
+			// Fan buttons
+			document.querySelectorAll(".fan-btn").forEach((btn) => {
+				btn.addEventListener("click", () => setFan(btn.dataset.fan));
+			});
+
+			// Swing buttons
+			document.querySelectorAll(".swing-btn").forEach((btn) => {
+				btn.addEventListener("click", () => setSwing(btn.dataset.swing));
+			});
+
+			// Tab buttons
+			document.querySelectorAll(".tab-btn").forEach((btn) => {
+				btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+			});
+		}
+
+		// Send Command via REST API with error handling
+		async function sendCommand(data, buttonId = null) {
+			const commandId = Date.now().toString();
+
+			if (buttonId) {
+				setButtonLoading(buttonId, true);
+				pendingCommands.set(commandId, buttonId);
+			}
+
+			// Set timeout to clear loading state if server doesn't respond
+			const timeoutId = setTimeout(() => {
+				if (pendingCommands.has(commandId)) {
 					pendingCommands.delete(commandId);
-
 					if (buttonId) {
 						setButtonLoading(buttonId, false);
 					}
-
-					showToast(`Command failed: ${e.message}`, "error");
-
-					// Revert optimistic update by requesting fresh state
-					if (socket && socket.connected) {
-						socket.emit("request_state");
-					}
+					showToast("Command timed out", "error");
 				}
-			}
+			}, CONFIG.commandTimeout);
 
-			// --- CONTROL FUNCTIONS ---
-			function togglePower() {
-				const newVal = !state.power;
-				state.power = newVal;
-				renderUI();
-				sendCommand({ action: "power", value: newVal }, "powerBtn");
-			}
-
-			function setMode(m) {
-				state.mode = m;
-				renderUI();
-				sendCommand({ action: "set_mode", value: m }, `mode-${m}`);
-			}
-
-			function setFan(f) {
-				state.fanSpeed = f;
-				renderUI();
-				sendCommand({ action: "set_fan", value: f }, `fan-${f}`);
-			}
-
-			function setSwing(s) {
-				state.swing = s;
-				renderUI();
-				sendCommand({ action: "set_swing", value: s }, `swing-${s}`);
-			}
-
-			function updateTemp(change) {
-				const newTemp = state.targetTemp + change;
-				if (newTemp >= CONFIG.tempMin && newTemp <= CONFIG.tempMax) {
-					state.targetTemp = newTemp;
-					renderUI();
-					const btnId = change > 0 ? "tempUpBtn" : "tempDownBtn";
-					sendCommand({ action: "temp", value: newTemp }, btnId);
-				}
-			}
-
-			// --- RENDER FUNCTION ---
-			let lastHistoryLength = 0;
-			let lastHumidityHistoryLength = 0;
-
-			function renderUI() {
-				// Temp & Hum Display
-				document.getElementById("tempValue").innerText =
-					state.temperature !== null ? Math.round(state.temperature) : "--";
-				document.getElementById("humidityValue").innerText =
-					state.humidity !== null ? Math.round(state.humidity) : "--";
-
-				// Target Temp
-				document.getElementById("targetTemp").innerText = state.targetTemp;
-
-				// Disable buttons logic (only if not loading)
-				const tempDownBtn = document.getElementById("tempDownBtn");
-				const tempUpBtn = document.getElementById("tempUpBtn");
-
-				if (!tempDownBtn.classList.contains("loading")) {
-					tempDownBtn.disabled = state.targetTemp <= CONFIG.tempMin;
-				}
-				if (!tempUpBtn.classList.contains("loading")) {
-					tempUpBtn.disabled = state.targetTemp >= CONFIG.tempMax;
-				}
-
-				// Power Button State
-				const pBtn = document.getElementById("powerBtn");
-				const pTxt = document.getElementById("powerText");
-				if (state.power) {
-					pBtn.classList.add("power-btn-active", "text-black");
-					pBtn.classList.remove("text-red-500");
-					pTxt.innerText = "ON";
-				} else {
-					pBtn.classList.remove("power-btn-active", "text-black");
-					pBtn.classList.add("text-red-500");
-					pTxt.innerText = "OFF";
-				}
-
-				// Mode Active State
-				document.querySelectorAll('[id^="mode-"]').forEach((el) => el.classList.remove("active"));
-				const mBtn = document.getElementById("mode-" + state.mode);
-				if (mBtn) mBtn.classList.add("active");
-
-				// Fan Active State
-				document.querySelectorAll('[id^="fan-"]').forEach((el) => {
-					el.classList.remove("bg-black", "text-white");
-					el.classList.add("hover:bg-gray-100");
+			try {
+				const response = await fetch("/api/command", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(data),
 				});
-				const fBtn = document.getElementById("fan-" + state.fanSpeed);
-				if (fBtn) {
-					fBtn.classList.add("bg-black", "text-white");
-					fBtn.classList.remove("hover:bg-gray-100");
+
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}`);
 				}
 
-				// Swing Active State
-				document.querySelectorAll('[id^="swing-"]').forEach((el) => {
-					el.classList.remove("bg-black", "text-white");
-					el.classList.add("hover:bg-gray-100");
-				});
-				const sBtn = document.getElementById("swing-" + state.swing);
-				if (sBtn) {
-					sBtn.classList.add("bg-black", "text-white");
-					sBtn.classList.remove("hover:bg-gray-100");
+				clearTimeout(timeoutId);
+			} catch (e) {
+				console.error("Error sending command:", e);
+				clearTimeout(timeoutId);
+				pendingCommands.delete(commandId);
+
+				if (buttonId) {
+					setButtonLoading(buttonId, false);
 				}
 
-				// Update Charts (only rebuild labels when length changes)
-				if (tempChart && state.history) {
-					const historyLength = state.history.length;
-					if (lastHistoryLength !== historyLength) {
-						tempChart.data.labels = generateTimeLabels(historyLength);
-						lastHistoryLength = historyLength;
-					}
-					tempChart.data.datasets[0].data = state.history;
-					tempChart.update("none"); // Skip animation for performance
-				}
+				showToast(`Command failed: ${e.message}`, "error");
 
-				if (humidityChart && state.humidityHistory) {
-					const humidityLength = state.humidityHistory.length;
-					if (lastHumidityHistoryLength !== humidityLength) {
-						humidityChart.data.labels = generateTimeLabels(humidityLength);
-						lastHumidityHistoryLength = humidityLength;
-					}
-					humidityChart.data.datasets[0].data = state.humidityHistory;
-					humidityChart.update("none"); // Skip animation for performance
+				// Revert optimistic update by requesting fresh state
+				if (socket && socket.connected) {
+					socket.emit("request_state");
 				}
 			}
-		</script>
-	</body>
+		}
+
+		// --- CONTROL FUNCTIONS ---
+		function togglePower() {
+			const newVal = !state.power;
+			state.power = newVal;
+			renderUI();
+			sendCommand({ action: "power", value: newVal }, "powerBtn");
+		}
+
+		function setMode(m) {
+			state.mode = m;
+			renderUI();
+			sendCommand({ action: "set_mode", value: m }, `mode-${m}`);
+		}
+
+		function setFan(f) {
+			state.fanSpeed = f;
+			renderUI();
+			sendCommand({ action: "set_fan", value: f }, `fan-${f}`);
+		}
+
+		function setSwing(s) {
+			state.swing = s;
+			renderUI();
+			sendCommand({ action: "set_swing", value: s }, `swing-${s}`);
+		}
+
+		function updateTemp(change) {
+			const newTemp = state.targetTemp + change;
+			if (newTemp >= CONFIG.tempMin && newTemp <= CONFIG.tempMax) {
+				state.targetTemp = newTemp;
+				renderUI();
+				const btnId = change > 0 ? "tempUpBtn" : "tempDownBtn";
+				sendCommand({ action: "temp", value: newTemp }, btnId);
+			}
+		}
+
+		// --- RENDER FUNCTION ---
+		let lastHistoryLength = 0;
+		let lastHumidityHistoryLength = 0;
+
+		function renderUI() {
+			// Temp & Hum Display
+			document.getElementById("tempValue").innerText =
+				state.temperature !== null ? Math.round(state.temperature) : "--";
+			document.getElementById("humidityValue").innerText =
+				state.humidity !== null ? Math.round(state.humidity) : "--";
+
+			// Target Temp
+			document.getElementById("targetTemp").innerText = state.targetTemp;
+
+			// Disable buttons logic (only if not loading)
+			const tempDownBtn = document.getElementById("tempDownBtn");
+			const tempUpBtn = document.getElementById("tempUpBtn");
+
+			if (!tempDownBtn.classList.contains("loading")) {
+				tempDownBtn.disabled = state.targetTemp <= CONFIG.tempMin;
+			}
+			if (!tempUpBtn.classList.contains("loading")) {
+				tempUpBtn.disabled = state.targetTemp >= CONFIG.tempMax;
+			}
+
+			// Power Button State
+			const pBtn = document.getElementById("powerBtn");
+			const pTxt = document.getElementById("powerText");
+			if (state.power) {
+				pBtn.classList.add("power-btn-active", "text-black");
+				pBtn.classList.remove("text-red-500");
+				pTxt.innerText = "ON";
+			} else {
+				pBtn.classList.remove("power-btn-active", "text-black");
+				pBtn.classList.add("text-red-500");
+				pTxt.innerText = "OFF";
+			}
+
+			// Mode Active State
+			document.querySelectorAll('[id^="mode-"]').forEach((el) => el.classList.remove("active"));
+			const mBtn = document.getElementById("mode-" + state.mode);
+			if (mBtn) mBtn.classList.add("active");
+
+			// Fan Active State
+			document.querySelectorAll('[id^="fan-"]').forEach((el) => {
+				el.classList.remove("bg-black", "text-white");
+				el.classList.add("hover:bg-gray-100");
+			});
+			const fBtn = document.getElementById("fan-" + state.fanSpeed);
+			if (fBtn) {
+				fBtn.classList.add("bg-black", "text-white");
+				fBtn.classList.remove("hover:bg-gray-100");
+			}
+
+			// Swing Active State
+			document.querySelectorAll('[id^="swing-"]').forEach((el) => {
+				el.classList.remove("bg-black", "text-white");
+				el.classList.add("hover:bg-gray-100");
+			});
+			const sBtn = document.getElementById("swing-" + state.swing);
+			if (sBtn) {
+				sBtn.classList.add("bg-black", "text-white");
+				sBtn.classList.remove("hover:bg-gray-100");
+			}
+
+			// Update Charts (only rebuild labels when length changes)
+			if (tempChart && state.history) {
+				const historyLength = state.history.length;
+				if (lastHistoryLength !== historyLength) {
+					tempChart.data.labels = generateTimeLabels(historyLength);
+					lastHistoryLength = historyLength;
+				}
+				tempChart.data.datasets[0].data = state.history;
+				tempChart.update("none"); // Skip animation for performance
+			}
+
+			if (humidityChart && state.humidityHistory) {
+				const humidityLength = state.humidityHistory.length;
+				if (lastHumidityHistoryLength !== humidityLength) {
+					humidityChart.data.labels = generateTimeLabels(humidityLength);
+					lastHumidityHistoryLength = humidityLength;
+				}
+				humidityChart.data.datasets[0].data = state.humidityHistory;
+				humidityChart.update("none"); // Skip animation for performance
+			}
+		}
+	</script>
+</body>
+
 </html>
