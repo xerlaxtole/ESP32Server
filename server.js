@@ -15,8 +15,8 @@ const PORT = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === "production";
 
 // Polling configuration - Customize intervals here
-const POLL_INTERVAL_SECONDS = 30; // Poll ESP32 every 60 seconds (1 minute)
-const HISTORY_INTERVAL_MINUTES = 60; // Add to history every 60 minutes (1 hour)
+const POLL_INTERVAL_SECONDS = 5; // Poll ESP32 every 60 seconds (1 minute)
+const HISTORY_INTERVAL_SECONDS = 5; // Add to history every 5 seconds
 const CRON_EXPRESSION = `*/${POLL_INTERVAL_SECONDS} * * * * *`; // Every N seconds
 
 const io = new Server(server, {
@@ -160,7 +160,7 @@ io.on("connection", (socket) => {
 		// Add temperature to history only once per hour
 		if (data.temperature !== undefined) {
 			const now = Date.now();
-			const historyIntervalMs = HISTORY_INTERVAL_MINUTES * 60 * 1000;
+			const historyIntervalMs = HISTORY_INTERVAL_SECONDS * 1000;
 
 			// Add to history if:
 			// 1. This is the first entry (lastHistoryTimestamp is null), OR
@@ -173,10 +173,8 @@ io.on("connection", (socket) => {
 				lastHistoryTimestamp = now;
 
 				console.log(
-					`[${new Date(now).toISOString()}] Temperature ${
-						data.temperature
-					}°C added to history (${
-						serverState.history.length
+					`[${new Date(now).toISOString()}] Temperature ${data.temperature
+					}°C added to history (${serverState.history.length
 					}/${MAX_HISTORY})`
 				);
 
@@ -190,10 +188,8 @@ io.on("connection", (socket) => {
 					serverState.humidityHistory.push(data.humidity);
 
 					console.log(
-						`[${new Date(now).toISOString()}] Humidity ${
-							data.humidity
-						}% added to history (${
-							serverState.humidityHistory.length
+						`[${new Date(now).toISOString()}] Humidity ${data.humidity
+						}% added to history (${serverState.humidityHistory.length
 						}/${MAX_HISTORY})`
 					);
 
@@ -239,8 +235,7 @@ cron.schedule(CRON_EXPRESSION, () => {
 server.listen(PORT, () => {
 	console.log(`-------------------------------------------`);
 	console.log(
-		`🚀 Server started in ${
-			isProduction ? "PRODUCTION" : "DEVELOPMENT"
+		`🚀 Server started in ${isProduction ? "PRODUCTION" : "DEVELOPMENT"
 		} mode`
 	);
 	console.log(`🔌 Listening on port ${PORT}`);
